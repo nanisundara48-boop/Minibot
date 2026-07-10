@@ -2,461 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrueChats AI</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
     <style>
-        :root {
-            /* Colorful Light Theme */
-            --bg-main: #f4f7fb; 
-            --bg-sidebar: #ffffff;
-            --bg-card: #ffffff;
-            --accent-blue: #007bff;
-            --accent-pink: #ff007f;
-            --gradient-main: linear-gradient(135deg, #007bff, #ff007f);
-            --border-color: #e2e8f0;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --shadow-soft: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-main); color: var(--text-primary); overflow: hidden; height: 100vh; width: 100vw; }
-
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseLogo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-
-        /* Colorful Splash Screen */
-        #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gradient-main);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s ease;
-        }
-        .logo-box { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 50%; animation: pulseLogo 2s infinite ease-in-out; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .logo-txt-n { font-size: 4rem; font-weight: 800; color: var(--accent-blue); z-index: 2; margin-right: 5px; }
-        .logo-txt-l { font-size: 4rem; font-weight: 800; color: var(--accent-pink); z-index: 2; }
-        .splash-tag { margin-top: 25px; font-size: 1rem; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; font-weight: 600; }
-
-        /* Login Screen */
-        #auth-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main);
-            display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px;
-        }
-        .auth-card {
-            background: var(--bg-card); border: none; width: 100%; max-width: 400px;
-            padding: 40px 30px; border-radius: 20px; box-shadow: var(--shadow-soft); animation: fadeIn 0.5s ease;
-        }
-        .auth-card h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; text-align: center; color: var(--text-primary); }
-        .auth-card p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 24px; text-align: center; }
-        .input-group { margin-bottom: 18px; }
-        .input-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
-        .input-group input {
-            width: 100%; background: #f8fafc; border: 1px solid var(--border-color); padding: 14px 16px;
-            border-radius: 12px; color: var(--text-primary); outline: none; font-size: 0.95rem; transition: 0.2s;
-        }
-        .input-group input:focus { border-color: var(--accent-blue); background: #ffffff; }
-        .auth-btn {
-            width: 100%; background: var(--gradient-main); color: white;
-            border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-        }
-        .auth-toggle-link { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; }
-        .auth-toggle-link span { color: var(--accent-blue); font-weight: 600; }
-
-        /* Main App Layout */
-        #app-container { display: none; height: 100vh; width: 100vw; position: relative; }
-
-        /* Sidebar */
-        .sidebar {
-            width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.02);
-        }
-        .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
-        .sidebar-brand { font-weight: 700; font-size: 1.3rem; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 8px; }
-        
-        /* Search */
-        .search-box-wrapper { padding: 16px 20px 8px 20px; }
-        .search-inner {
-            display: flex; align-items: center; background: #f1f5f9; border: 1px solid transparent;
-            padding: 10px 14px; border-radius: 10px; gap: 10px;
-        }
-        .search-inner i { color: var(--text-secondary); }
-        .search-inner input { background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 0.9rem; width: 100%; }
-
-        .new-chat-btn {
-            margin: 10px 20px; background: white; border: 2px solid var(--accent-blue);
-            color: var(--accent-blue); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600;
-            font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
-        }
-        .new-chat-btn:hover { background: var(--accent-blue); color: white; }
-
-        /* Chat History */
-        .chat-history-list { flex: 1; overflow-y: auto; padding: 10px 20px; display: flex; flex-direction: column; gap: 8px; }
-        .history-card {
-            padding: 12px 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px;
-            font-size: 0.9rem; color: var(--text-secondary); transition: all 0.2s ease; border: 1px solid transparent;
-        }
-        .history-card:hover, .history-card.active { background: #f8fafc; color: var(--accent-blue); border-color: var(--border-color); font-weight: 500; }
-        .history-card i { color: var(--accent-pink); }
-        .history-card .title-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .delete-thread-btn { position: absolute; right: 12px; color: #ef4444; display: none; cursor: pointer; }
-        .history-card:hover .delete-thread-btn { display: block; }
-
-        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
-        .user-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; }
-        .logout-btn { color: #ef4444; cursor: pointer; font-size: 1.2rem; }
-
-        /* Main Chat Area */
-        .main-viewport { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); height: 100%; }
-        .main-header {
-            height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center;
-            justify-content: space-between; padding: 0 24px; background: var(--bg-card); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        }
-        .menu-bar-toggle { font-size: 1.4rem; color: var(--text-primary); cursor: pointer; display: none; }
-        
-        .engine-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; }
-        .engine-btn {
-            padding: 8px 16px; border-radius: 8px; border: none; background: transparent;
-            color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
-        }
-        .engine-btn.active[data-engine="lite"] { background: white; color: var(--accent-blue); box-shadow: var(--shadow-soft); }
-        .engine-btn.active[data-engine="pro"] { background: white; color: var(--accent-pink); box-shadow: var(--shadow-soft); }
-
-        /* Messages */
-        .chat-stream-body { flex: 1; overflow-y: auto; padding: 30px 10%; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
-        .msg-row { display: flex; width: 100%; animation: fadeIn 0.3s ease-out; }
-        .msg-row.user { justify-content: flex-end; }
-        .msg-row.ai { justify-content: flex-start; }
-        
-        .msg-bubble { max-width: 80%; padding: 14px 18px; border-radius: 18px; font-size: 0.98rem; line-height: 1.6; position: relative; box-shadow: var(--shadow-soft); }
-        .msg-row.user .msg-bubble { background: var(--gradient-main); color: white; border-bottom-right-radius: 4px; }
-        .msg-row.ai .msg-bubble { background: white; border: 1px solid var(--border-color); color: var(--text-primary); border-bottom-left-radius: 4px; width: 100%; }
-
-        /* Chat Input Dock */
-        .input-dock-footer { padding: 20px 10%; background: var(--bg-main); }
-        .input-wrapper-card {
-            background: white; border: 1px solid var(--border-color); border-radius: 30px;
-            padding: 10px 15px; display: flex; align-items: flex-end; gap: 12px; box-shadow: var(--shadow-soft);
-        }
-        .input-wrapper-card textarea {
-            flex: 1; background: transparent; border: none; outline: none; color: var(--text-primary);
-            font-size: 1rem; resize: none; height: 26px; max-height: 120px; padding: 2px 0;
-        }
-        .input-wrapper-card textarea::placeholder { color: #94a3b8; }
-        .deck-action-icon { background: #f1f5f9; border: none; color: var(--accent-blue); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .deck-action-icon:hover { background: var(--accent-blue); color: white; }
-        
-        .dispatch-send-btn { background: var(--gradient-main); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); }
-        .dispatch-send-btn:hover { transform: scale(1.05); }
-
-        .status-pipeline-loader { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--accent-blue); align-self: flex-start; background: white; padding: 10px 20px; border-radius: 20px; box-shadow: var(--shadow-soft); font-weight: 500; }
-
-        @media (max-width: 968px) {
-            .chat-stream-body, .input-dock-footer { padding-left: 15px; padding-right: 15px; }
-            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .menu-bar-toggle { display: block; }
-        }
+        body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
+        .sidebar { width:280px; background:#f4f4f4; padding:20px; display:flex; flex-direction:column; }
+        .chat-area { flex:1; display:flex; flex-direction:column; }
+        #messages { flex:1; overflow-y:auto; padding:20px; }
+        .input-box { padding:20px; display:flex; gap:10px; }
+        input, textarea { padding:10px; border-radius:5px; border:1px solid #ccc; flex:1; }
+        button { padding:10px 20px; background:#007bff; color:#fff; border:none; cursor:pointer; }
     </style>
 </head>
 <body>
-
-    <div id="splash-screen">
-        <div class="logo-box">
-            <span class="logo-txt-n">N</span>
-            <span class="logo-txt-l">L</span>
-        </div>
-        <p class="splash-tag">TrueChats Platform</p>
+    <div class="sidebar">
+        <h3>TrueChats AI</h3>
+        <input type="text" id="search" placeholder="Search history..." oninput="filter()">
+        <button onclick="newChat()">+ New Chat</button>
+        <div id="history"></div>
     </div>
-
-    <div id="auth-screen">
-        <div class="auth-card">
-            <h2 id="auth-title">Welcome</h2>
-            <p id="auth-subtitle">Login to continue using TrueChats AI</p>
-            
-            <div class="input-group">
-                <label>Email ID</label>
-                <input type="email" id="auth-email" placeholder="nani@example.com">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="auth-password" placeholder="••••••••">
-            </div>
-
-            <button class="auth-btn" onclick="executeAuthenticationRequest()" id="auth-primary-submit-btn">Login</button>
-            <div class="auth-toggle-link" onclick="toggleAuthModes()" id="auth-toggle-trigger">Don't have an account? <span>Sign Up</span></div>
+    <div class="chat-area">
+        <div id="messages"></div>
+        <div class="input-box">
+            <textarea id="msg" placeholder="Type here..."></textarea>
+            <button onclick="send()">Send</button>
         </div>
-    </div>
-
-    <div id="app-container">
-        <aside class="sidebar" id="app-sidebar-drawer">
-            <div class="sidebar-header">
-                <span class="sidebar-brand"><i class="fas fa-comment-dots" style="color:var(--accent-pink);"></i> TrueChats AI</span>
-                <i class="fas fa-times menu-bar-toggle" onclick="toggleMobileSidebarView(false)"></i>
-            </div>
-            
-            <div class="search-box-wrapper">
-                <div class="search-inner">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="thread-search-input" placeholder="Search chats..." oninput="filterChatThreadsLog(this.value)">
-                </div>
-            </div>
-
-            <button class="new-chat-btn" onclick="initializeFreshChatThread()"><i class="fas fa-plus"></i> New Chat</button>
-            
-            <div class="chat-history-list" id="threads-injection-target"></div>
-
-            <div class="sidebar-footer">
-                <div class="user-meta">
-                    <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
-                    <span id="active-user-display-string">Loading...</span>
-                </div>
-                <i class="fas fa-sign-out-alt logout-btn" onclick="terminateSessionLog()" title="Logout"></i>
-            </div>
-        </aside>
-
-        <main class="main-viewport">
-            <header class="main-header">
-                <i class="fas fa-bars menu-bar-toggle" onclick="toggleMobileSidebarView(true)"></i>
-                
-                <div class="engine-container">
-                    <button class="engine-btn active" data-engine="lite" onclick="shiftActiveModelSelection('lite')"><i class="fas fa-bolt"></i> Fast AI</button>
-                    <button class="engine-btn" data-engine="pro" onclick="shiftActiveModelSelection('pro')"><i class="fas fa-star"></i> Smart AI</button>
-                </div>
-                
-                <div style="font-size: 0.85rem; color: #10b981; font-weight: 600;"><i class="fas fa-cloud"></i> Synced</div>
-            </header>
-
-            <div class="chat-stream-body" id="message-nodes-viewport-stream"></div>
-
-            <div class="input-dock-footer">
-                <div class="input-wrapper-card">
-                    <button class="deck-action-icon" title="Attach image or file"><i class="fas fa-paperclip"></i></button>
-                    <textarea id="main-prompt-input-field" placeholder="Type your message here..." oninput="autoScaleTextareaHeight(this)" onkeydown="interceptReturnKeyEvent(event)"></textarea>
-                    <button class="deck-action-icon" id="mic-trigger-btn" onclick="triggerWebAudioSpeechRecognition()" title="Speak to typing"><i class="fas fa-microphone"></i></button>
-                    <button class="dispatch-send-btn" onclick="dispatchMessagePayload()"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </main>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
-            authDomain: "minibot-1b6dc.firebaseapp.com",
-            projectId: "minibot-1b6dc",
-            storageBucket: "minibot-1b6dc.firebasestorage.app",
-            messagingSenderId: "726010343364",
-            appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
-        };
-
-        const OPENAI_API_TOKEN_VAL = "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";
-        const GEMINI_API_TOKEN_VAL = "AQ.Ab8RN6JgChPe_v-qNDgfDBNOi5yRriVWoU2JqN8BczlgAyKmEQ";
-
-        let activeAIEngineModel = 'lite';
-        let firebaseAuthenticatedUserRef = null;
-        let activeSelectedThreadId = null;
-        let localCacheThreadCollectionArray = [];
-        let isAuthenticationScreenModeRegistration = false;
-
-        if (firebaseConfig.apiKey) { firebase.initializeApp(firebaseConfig); }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                splash.style.opacity = '0';
-                setTimeout(() => splash.style.display = 'none', 400);
-            }, 2000);
-            
-            firebase.auth().onAuthStateChanged(user => {
-                if (user) {
-                    firebaseAuthenticatedUserRef = user;
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('app-container').style.display = 'flex';
-                    document.getElementById('active-user-display-string').innerText = "Nani (Admin)";
-                    syncUserChatHistoryThreadsRealtime();
-                } else {
-                    firebaseAuthenticatedUserRef = null;
-                    document.getElementById('app-container').style.display = 'none';
-                    document.getElementById('auth-screen').style.display = 'flex';
-                }
-            });
-        });
-
-        function toggleAuthModes() {
-            isAuthenticationScreenModeRegistration = !isAuthenticationScreenModeRegistration;
-            document.getElementById('auth-title').innerText = isAuthenticationScreenModeRegistration ? "Create Account" : "Welcome Back";
-            document.getElementById('auth-subtitle').innerText = isAuthenticationScreenModeRegistration ? "Register to start using AI" : "Login to continue using TrueChats AI";
-            document.getElementById('auth-primary-submit-btn').innerText = isAuthenticationScreenModeRegistration ? "Sign Up" : "Login";
-            document.getElementById('auth-toggle-trigger').innerHTML = isAuthenticationScreenModeRegistration ? "Already have an account? <span>Login</span>" : "Don't have an account? <span>Sign Up</span>";
-        }
-
-        async function executeAuthenticationRequest() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            if(!email || !password) return alert("Please enter email and password.");
-            try {
-                if (isAuthenticationScreenModeRegistration) {
-                    await firebase.auth().createUserWithEmailAndPassword(email, password);
-                } else {
-                    await firebase.auth().signInWithEmailAndPassword(email, password);
-                }
-            } catch (err) { alert(`Error: ${err.message}`); }
-        }
-
-        function terminateSessionLog() { firebase.auth().signOut(); }
-
-        function syncUserChatHistoryThreadsRealtime() {
-            if (!firebaseAuthenticatedUserRef) return;
-            firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads')
-                .orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-                    localCacheThreadCollectionArray = [];
-                    snapshot.forEach(doc => { localCacheThreadCollectionArray.push({ id: doc.id, ...doc.data() }); });
-                    renderChatThreadsSidebarComponent(localCacheThreadCollectionArray);
-                    
-                    if (!activeSelectedThreadId && localCacheThreadCollectionArray.length > 0) {
-                        selectActiveWorkingContextThread(localCacheThreadCollectionArray[0].id);
-                    } else if (localCacheThreadCollectionArray.length === 0) {
-                        initializeFreshChatThread(true);
-                    }
-                });
-        }
-
-        function renderChatThreadsSidebarComponent(threadsArray) {
-            const container = document.getElementById('threads-injection-target');
-            container.innerHTML = '';
-            threadsArray.forEach(thread => {
-                const card = document.createElement('div');
-                card.className = `history-card ${thread.id === activeSelectedThreadId ? 'active' : ''}`;
-                card.setAttribute('onclick', `selectActiveWorkingContextThread('${thread.id}')`);
-                card.innerHTML = `<i class="far fa-comment"></i><span class="title-text">${thread.title || 'New Chat'}</span><i class="fas fa-trash-alt delete-thread-btn" onclick="event.stopPropagation(); purgeThreadContextRecord('${thread.id}')"></i>`;
-                container.appendChild(card);
-            });
-        }
-
-        async function initializeFreshChatThread(isInitialDefault = false) {
-            if (!firebaseAuthenticatedUserRef) return;
-            const docRef = await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').add({ title: "New Chat", timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-            activeSelectedThreadId = docRef.id;
-            if(!isInitialDefault) toggleMobileSidebarView(false);
-            document.getElementById('message-nodes-viewport-stream').innerHTML = '';
-            renderWelcomeBannerNode();
-        }
-
-        function selectActiveWorkingContextThread(threadId) {
-            activeSelectedThreadId = threadId;
-            document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
-            firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).collection('messages').orderBy('timestamp', 'asc').get().then(snapshot => {
-                const viewport = document.getElementById('message-nodes-viewport-stream');
-                viewport.innerHTML = '';
-                if(snapshot.empty) { renderWelcomeBannerNode(); } 
-                else { snapshot.forEach(doc => { const data = doc.data(); appendMessageNodeToDOM(data.sender, data.text, false); }); }
-                toggleMobileSidebarView(false);
-            });
-        }
-
-        function purgeThreadContextRecord(threadId) {
-            if(confirm("Delete this chat permanently?")) {
-                firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).delete().then(() => {
-                    if(activeSelectedThreadId === threadId) { activeSelectedThreadId = null; document.getElementById('message-nodes-viewport-stream').innerHTML = ''; }
-                });
-            }
-        }
-
-        async function dispatchMessagePayload() {
-            const field = document.getElementById('main-prompt-input-field');
-            const prompt = field.value.trim();
-            if(!prompt) return;
-            field.value = ''; field.style.height = '26px';
-
-            appendMessageNodeToDOM('user', prompt);
-            if(firebaseAuthenticatedUserRef && activeSelectedThreadId) {
-                const cThread = localCacheThreadCollectionArray.find(t => t.id === activeSelectedThreadId);
-                if(cThread && (cThread.title === "New Chat" || !cThread.title)) {
-                    firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).update({ title: prompt.split(" ").slice(0, 3).join(" ") + "..." });
-                }
-                await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({ sender: 'user', text: prompt, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-            }
-
-            const loaderId = appendStatusPipelineLoaderToStream();
-
-            try {
-                let generatedAnswerString = "";
-                if (activeAIEngineModel === 'lite') {
-                    const res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_TOKEN_VAL}` }, body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: prompt }] }) });
-                    const data = await res.json();
-                    if(data.error) throw new Error(data.error.message);
-                    generatedAnswerString = data.choices[0].message.content;
-                } else {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_TOKEN_VAL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-                    const data = await res.json();
-                    if(data.error) throw new Error(data.error.message);
-                    generatedAnswerString = data.candidates[0].content.parts[0].text;
-                }
-
-                removePipelineLoaderElement(loaderId);
-                appendMessageNodeToDOM('ai', generatedAnswerString);
-
-                if(firebaseAuthenticatedUserRef && activeSelectedThreadId) {
-                    await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({ sender: 'ai', text: generatedAnswerString, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                }
-            } catch (err) {
-                removePipelineLoaderElement(loaderId);
-                appendMessageNodeToDOM('ai', `Sorry, I ran into an error: ${err.message}`);
-            }
-        }
-
-        function appendMessageNodeToDOM(sender, text, triggerScroll = true) {
-            const streamArea = document.getElementById('message-nodes-viewport-stream');
-            const row = document.createElement('div');
-            row.className = `msg-row ${sender}`;
-            const bubble = document.createElement('div');
-            bubble.className = 'msg-bubble';
-
-            if(sender === 'ai') {
-                bubble.innerHTML = `<div>${marked.parse(text)}</div>`;
-            } else { bubble.textContent = text; }
-
-            row.appendChild(bubble); streamArea.appendChild(row);
-            if(triggerScroll) streamArea.scrollTop = streamArea.scrollHeight;
-        }
-
-        function appendStatusPipelineLoaderToStream() {
-            const streamArea = document.getElementById('message-nodes-viewport-stream');
-            const uniqueId = 'loader-' + Date.now();
-            const loaderNode = document.createElement('div');
-            loaderNode.className = 'status-pipeline-loader'; loaderNode.id = uniqueId;
-            loaderNode.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>AI is typing...</span>`;
-            streamArea.appendChild(loaderNode); streamArea.scrollTop = streamArea.scrollHeight;
-            return uniqueId;
-        }
-
-        function removePipelineLoaderElement(id) { const target = document.getElementById(id); if(target) target.remove(); }
-
-        function renderWelcomeBannerNode() {
-            appendMessageNodeToDOM('ai', "### Welcome to TrueChats! \nHi! I am your AI assistant. Type a question below and hit send. You can ask me anything in simple words!");
-        }
-
-        function autoScaleTextareaHeight(element) { element.style.height = '26px'; element.style.height = (element.scrollHeight - 10) + 'px'; }
-        function interceptReturnKeyEvent(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); dispatchMessagePayload(); } }
-        function shiftActiveModelSelection(modelKey) { activeAIEngineModel = modelKey; document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.engine-btn[data-engine="${modelKey}"]`).classList.add('active'); }
-        function toggleMobileSidebarView(forceDisplayState) { const sidebar = document.getElementById('app-sidebar-drawer'); if(forceDisplayState) sidebar.classList.add('mobile-open'); else sidebar.classList.remove('mobile-open'); }
+        const db = firebase.initializeApp({/* config */}).firestore();
         
-        function triggerWebAudioSpeechRecognition() {
-            const NativeSpeechRecognitionEngine = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!NativeSpeechRecognitionEngine) return alert("Speech recognition not supported.");
-            const activeRecognitionInstance = new NativeSpeechRecognitionEngine();
-            activeRecognitionInstance.lang = 'en-US';
-            activeRecognitionInstance.onresult = (eventData) => { document.getElementById('main-prompt-input-field').value += eventData.results[0][0].transcript; };
-            activeRecognitionInstance.start();
+        // Chat Logic
+        async function send() {
+            const msg = document.getElementById('msg').value;
+            if(!msg) return;
+            
+            // Add to UI
+            document.getElementById('messages').innerHTML += `<div><b>You:</b> ${msg}</div>`;
+            document.getElementById('msg').value = '';
+            
+            // Firebase & AI Logic
+            await db.collection('chats').add({ prompt: msg, timestamp: new Date() });
+            // API call here
+        }
+
+        function filter() {
+            const val = document.getElementById('search').value.toLowerCase();
+            // Filtering logic
+        }
+
+        function newChat() {
+            document.getElementById('messages').innerHTML = '';
         }
     </script>
 </body>
