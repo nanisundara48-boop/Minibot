@@ -264,23 +264,13 @@
         // ==========================================
         // CRITICAL CONFIGURATION: PASTE FIREBASE CREDENTIALS HERE
         // ==========================================
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
-  authDomain: "minibot-1b6dc.firebaseapp.com",
-  projectId: "minibot-1b6dc",
-  storageBucket: "minibot-1b6dc.firebasestorage.app",
-  messagingSenderId: "726010343364",
-  appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
+            authDomain: "minibot-1b6dc.firebaseapp.com",
+            projectId: "minibot-1b6dc",
+            storageBucket: "minibot-1b6dc.firebasestorage.app",
+            messagingSenderId: "726010343364",
+            appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
         };
 
         // Static AI Request Tokens Key Maps Fallbacks
@@ -294,29 +284,26 @@ const app = initializeApp(firebaseConfig);
         let localCacheThreadCollectionArray = [];
         let isAuthenticationScreenModeRegistration = false;
 
-        // Initialize Firebase SDK Layers Instantly
-        if (firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
+        // Initialize Firebase SDK Layers Instantly using Compatibility Layer API
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
             firebase.initializeApp(firebaseConfig);
         } else {
-            console.warn("Firebase parameters missing initialization tokens. Cloud synchronization features stand suspended until updated.");
+            console.warn("Firebase parameters missing initialization tokens.");
         }
 
         // ==========================================
         // 1. LIFECYCLE MANAGEMENT & SPA HARDWARE BACK INTERCEPTION
         // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
-            // Precise 2-Second Core App Initialization Splash Timer Sequences
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
                 setTimeout(() => splash.style.display = 'none', 400);
             }, 2000);
 
-            // Initialize App Screen History State management mapping layouts
             window.history.pushState({ screenState: "base_gateway" }, "");
             
-            // Monitor Active Auth State Actions
-            if (firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
                 firebase.auth().onAuthStateChanged(user => {
                     if (user) {
                         firebaseAuthenticatedUserRef = user;
@@ -332,25 +319,19 @@ const app = initializeApp(firebaseConfig);
                     }
                 });
             } else {
-                // Fallback to bypass auth layout constraints if Firebase Credentials are not provided yet
                 document.getElementById('auth-screen').style.display = 'flex';
             }
         });
 
-        // HARDWARE BACK BUTTON PROTECTION BLOCK (SPA ROUTING LAYER)
         window.onpopstate = function(event) {
-            // Mobile device back click capture protection strategy intercepting navigation defaults
             if (event.state && event.state.screenState === "workspace_active") {
-                // Left empty purposely to sustain current session layout
                 window.history.pushState({ screenState: "workspace_active" }, "");
             } else {
-                // If on mobile view panel and sidebar open, close sidebar drawer view pane instead of exiting browser app route
                 const sidebar = document.getElementById('app-sidebar-drawer');
                 if (sidebar.classList.contains('mobile-open')) {
                     toggleMobileSidebarView(false);
                     window.history.pushState({ screenState: "workspace_active" }, "");
                 } else {
-                    // Re-route and lock back boundary loops safely inside app constraints frame
                     window.history.pushState({ screenState: "workspace_active" }, "");
                     alert("Click Sign Out Icon at the bottom footer if you intend to disconnect secure database server links safely.");
                 }
@@ -371,17 +352,7 @@ const app = initializeApp(firebaseConfig);
         async function executeAuthenticationRequest() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value.trim();
-            if(!email || !password) return alert("Provide authentication data inputs mapping parameter frameworks fully.");
-
-            if (firebaseConfig.apiKey === "AIzaSyAsYourKeyHere_Change_This") {
-                // Mock local storage simulation bypass system for developers running zero configurations setups initially
-                alert("Running configuration simulation sandbox bypass frame. Please paste genuine Firebase parameters config to instantiate live server records logs.");
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'flex';
-                document.getElementById('active-user-display-string').innerText = "sandbox@nl.internal";
-                renderWelcomeBannerNode();
-                return;
-            }
+            if(!email || !password) return alert("Provide credentials fully.");
 
             try {
                 if (isAuthenticationScreenModeRegistration) {
@@ -395,11 +366,7 @@ const app = initializeApp(firebaseConfig);
         }
 
         function terminateSessionLog() {
-            if (firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
-                firebase.auth().signOut();
-            } else {
-                location.reload();
-            }
+            firebase.auth().signOut();
         }
 
         // ==========================================
@@ -422,7 +389,7 @@ const app = initializeApp(firebaseConfig);
                     } else if (localCacheThreadCollectionArray.length === 0) {
                         initializeFreshChatThread(true);
                     }
-                });
+                }, error => console.error("Firestore sync error:", error));
         }
 
         function renderChatThreadsSidebarComponent(threadsArray) {
@@ -470,7 +437,6 @@ const app = initializeApp(firebaseConfig);
             activeSelectedThreadId = threadId;
             document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
             
-            // Re-sync historical message collection subsets
             firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).collection('messages')
                 .orderBy('timestamp', 'asc')
                 .get()
@@ -511,10 +477,8 @@ const app = initializeApp(firebaseConfig);
             field.value = '';
             field.style.height = '26px';
 
-            // Post User Message
             appendMessageNodeToDOM('user', prompt);
             if(firebaseAuthenticatedUserRef && activeSelectedThreadId) {
-                // Update collection title index asynchronously matching first prompt payload metrics
                 updateThreadTitleSummaryIfRequired(activeSelectedThreadId, prompt);
                 await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({
                     sender: 'user', text: prompt, timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -527,7 +491,6 @@ const app = initializeApp(firebaseConfig);
                 let generatedAnswerString = "";
 
                 if (activeAIEngineModel === 'lite') {
-                    // Open AI Endpoints Pipeline Execution Stream
                     const apiResponseRaw = await fetch('https://api.openai.com/v1/chat/completions', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_TOKEN_VAL}` },
@@ -537,7 +500,6 @@ const app = initializeApp(firebaseConfig);
                     if(cleanedJSONData.error) throw new Error(cleanedJSONData.error.message);
                     generatedAnswerString = cleanedJSONData.choices[0].message.content;
                 } else {
-                    // Google Gemini End-to-End Enterprise API Configuration Routing Layer 
                     const apiResponseRaw = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_TOKEN_VAL}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -559,7 +521,7 @@ const app = initializeApp(firebaseConfig);
 
             } catch (err) {
                 removePipelineLoaderElement(loaderId);
-                appendMessageNodeToDOM('ai', `**Architecture Pipeline Processing Refusal Error:** ${err.message}. Check your internet connection or API balance quotas.`);
+                appendMessageNodeToDOM('ai', `**Architecture Pipeline Processing Refusal Error:** ${err.message}.`);
             }
         }
 
@@ -622,7 +584,7 @@ const app = initializeApp(firebaseConfig);
         }
 
         function renderWelcomeBannerNode() {
-            appendMessageNodeToDOM('ai', "### TrueChats Secure Core Hub v2.5\nSystem interfaces online and running smoothly inside your sandboxed web browser terminal container environment. Realtime historical backup arrays are being captured directly into your configured cloud database storage space.");
+            appendMessageNodeToDOM('ai', "### TrueChats Secure Core Hub v2.5\nSystem interfaces online and running smoothly inside your sandboxed web browser terminal container environment.");
         }
 
         function autoScrollStreamViewportToBottom() {
@@ -676,7 +638,7 @@ const app = initializeApp(firebaseConfig);
 
         function triggerWebAudioSpeechRecognition() {
             const NativeSpeechRecognitionEngine = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!NativeSpeechRecognitionEngine) return alert("Integrated user agent environment profile lacks Web Audio Speech synthesis architecture components.");
+            if(!NativeSpeechRecognitionEngine) return alert("Speech recognition not supported.");
 
             const activeRecognitionInstance = new NativeSpeechRecognitionEngine();
             activeRecognitionInstance.lang = 'en-US';
