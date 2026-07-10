@@ -3,59 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrueChats AI</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <style>
-        body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
-        .sidebar { width:280px; background:#f4f4f4; padding:20px; display:flex; flex-direction:column; }
-        .chat-area { flex:1; display:flex; flex-direction:column; }
-        #messages { flex:1; overflow-y:auto; padding:20px; }
-        .input-box { padding:20px; display:flex; gap:10px; }
-        input, textarea { padding:10px; border-radius:5px; border:1px solid #ccc; flex:1; }
-        button { padding:10px 20px; background:#007bff; color:#fff; border:none; cursor:pointer; }
-    </style>
+    <title>NL Advanced Multi-AI Chatbot</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 </head>
 <body>
-    <div class="sidebar">
-        <h3>TrueChats AI</h3>
-        <input type="text" id="search" placeholder="Search history..." oninput="filter()">
-        <button onclick="newChat()">+ New Chat</button>
-        <div id="history"></div>
-    </div>
-    <div class="chat-area">
-        <div id="messages"></div>
-        <div class="input-box">
-            <textarea id="msg" placeholder="Type here..."></textarea>
-            <button onclick="send()">Send</button>
+
+    <div id="loading-screen" class="overlay">
+        <div class="logo-wrapper">
+            <div class="logo-nl">
+                <span class="letter-n">N</span>
+                <span class="letter-l">L</span>
+            </div>
+            <div id="loader-status" class="loader-text">Researching and Analysing...</div>
+            <div class="loading-bar"><span></span></div>
+            <div class="brand-footer">Made with NL</div>
         </div>
     </div>
 
-    <script>
-        const db = firebase.initializeApp({/* config */}).firestore();
+    <div id="auth-screen" class="overlay hidden">
+        <div class="login-card">
+            <h2>Welcome to NL Multi-AI Portal</h2>
+            <p>Access your professional secure workspace</p>
+            <button id="google-login-btn" class="btn-primary"><i class="fab fa-google"></i> Sign In with Google</button>
+            <div class="brand-footer">Made with NL</div>
+        </div>
+    </div>
+
+    <div id="app-container" class="app-layout hidden">
         
-        // Chat Logic
-        async function send() {
-            const msg = document.getElementById('msg').value;
-            if(!msg) return;
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-small">N<span>L</span></div>
+                <button id="new-chat-btn" class="btn-icon-label"><i class="fa fa-plus"></i> New Chat</button>
+            </div>
             
-            // Add to UI
-            document.getElementById('messages').innerHTML += `<div><b>You:</b> ${msg}</div>`;
-            document.getElementById('msg').value = '';
+            <div class="chat-history-container" id="chat-history-list">
+                </div>
+
+            <div class="sidebar-footer">
+                <button id="open-library-btn" class="btn-sidebar"><i class="fa fa-book"></i> Prompt Library</button>
+                <button id="open-settings-btn" class="btn-sidebar"><i class="fa fa-cog"></i> Settings</button>
+                <div class="user-profile" id="user-display">
+                    <img id="user-avatar" src="" alt="Avatar" class="avatar hidden">
+                    <span id="user-name">Secure User</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-chat-area">
             
-            // Firebase & AI Logic
-            await db.collection('chats').add({ prompt: msg, timestamp: new Date() });
-            // API call here
-        }
+            <header class="top-nav">
+                <div class="model-switch-container">
+                    <button id="switch-lite" class="model-btn active" data-model="lite">
+                        <i class="fa fa-bolt"></i> AI Lite <span class="badge">ChatGPT</span>
+                    </button>
+                    <button id="switch-pro" class="model-btn" data-model="pro">
+                        <i class="fa fa-star"></i> AI Pro <span class="badge">Gemini 1.5</span>
+                    </button>
+                </div>
+                <div class="nav-actions">
+                    <button id="stop-generation-btn" class="btn-danger hidden"><i class="fa fa-stop"></i> Stop</button>
+                    <button id="export-chat-btn" class="btn-secondary" title="Export Conversations"><i class="fa fa-download"></i></button>
+                    <button id="share-chat-btn" class="btn-secondary" title="Share link"><i class="fa fa-share-alt"></i></button>
+                </div>
+            </header>
 
-        function filter() {
-            const val = document.getElementById('search').value.toLowerCase();
-            // Filtering logic
-        }
+            <section class="messages-container" id="messages-box">
+                <div class="empty-state">
+                    <h3>How can I assist you today?</h3>
+                    <p>Select model and start a secure session.</p>
+                </div>
+            </section>
 
-        function newChat() {
-            document.getElementById('messages').innerHTML = '';
+            <div id="image-preview-panel" class="preview-panel hidden">
+                <span id="close-preview">&times;</span>
+                <img id="preview-img" src="" alt="Upload preview">
+            </div>
+
+            <footer class="input-container-panel">
+                <div class="chat-input-wrapper">
+                    <label for="image-upload" class="input-action-btn" title="Upload Image (AI Pro)">
+                        <i class="fa fa-paperclip"></i>
+                        <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                    </label>
+                    
+                    <textarea id="user-message-input" placeholder="Ask anything, press Enter to search..." rows="1"></textarea>
+                    
+                    <button id="voice-input-btn" class="input-action-btn" title="Voice Input"><i class="fa fa-microphone"></i></button>
+                    <button id="send-message-btn" class="send-btn" title="Send message"><i class="fa fa-paper-plane"></i></button>
+                </div>
+                <div class="bottom-branding">Made with NL | End-to-End Secure Processing Terminal</div>
+            </footer>
+        </main>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa fa-sliders"></i> Control Settings panel</h3>
+                <span class="close-modal" id="close-settings">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>System Prompts / Personas</label>
+                    <select id="system-persona-select">
+                        <option value="default">Standard AI Assistant</option>
+                        <option value="coder">Act like a Professional Coder / App Developer</option>
+                        <option value="interviewer">Act like an Elite Technical Interviewer</option>
+                    </select>
+                </div>
+                <div class="form-group metrics-box">
+                    <h4>Session Tracker Matrix</h4>
+                    <p>Estimated Token Cost (Current Frame): <span id="token-tracker-metric">0</span> tokens</p>
+                    <p>Context Buffer Limit: <strong>Last 5 Messages</strong> (Optimized Window Mode)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="library-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa fa-book"></i> Save Prompt Shortcuts</h3>
+                <span class="close-modal" id="close-library">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ul class="prompt-quick-list">
+                    <li class="prompt-item" data-prompt="Check this Java code for bugs: ">Check Java Bugs</li>
+                    <li class="prompt-item" data-prompt="Refactor this JS code for optimal speed: ">Optimize JS Performance</li>
+                    <li class="prompt-item" data-prompt="Explain this structural logic simply: ">Explain Architecture Logic</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <button id="scroll-bottom-btn" class="scroll-btn hidden"><i class="fa fa-arrow-down"></i></button>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
         }
+      }
     </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
