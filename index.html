@@ -3,176 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TrueChats AI Premium Terminal</title>
+    <title>TrueChats AI</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
-            --bg-main: #0b0d12;
-            --bg-sidebar: #11141d;
-            --bg-card: #171c28;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --border-color: #242b3d;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            /* Colorful Light Theme */
+            --bg-main: #f4f7fb; 
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --accent-blue: #007bff;
+            --accent-pink: #ff007f;
+            --gradient-main: linear-gradient(135deg, #007bff, #ff007f);
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-soft: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-main); color: var(--text-primary); overflow: hidden; height: 100vh; width: 100vw; }
 
-        /* --- Animations --- */
+        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
+        @keyframes pulseLogo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
-        /* --- Splash Screen --- */
+        /* Colorful Splash Screen */
         #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #161b26 0%, #07090d 100%);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gradient-main);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s ease;
         }
-        .logo-box { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; animation: pulseLogo 2s infinite ease-in-out; }
-        .logo-txt-n { font-size: 5.5rem; font-weight: 800; color: #fff; z-index: 2; text-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
-        .logo-txt-l { font-size: 6rem; font-weight: 800; color: rgba(255, 255, 255, 0.03); position: absolute; top: 12px; left: 24px; z-index: 1; }
-        .splash-tag { margin-top: 25px; font-size: 0.8rem; letter-spacing: 4px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+        .logo-box { position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 50%; animation: pulseLogo 2s infinite ease-in-out; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .logo-txt-n { font-size: 4rem; font-weight: 800; color: var(--accent-blue); z-index: 2; margin-right: 5px; }
+        .logo-txt-l { font-size: 4rem; font-weight: 800; color: var(--accent-pink); z-index: 2; }
+        .splash-tag { margin-top: 25px; font-size: 1rem; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; font-weight: 600; }
 
-        /* --- Authentication (Firebase Container) --- */
+        /* Login Screen */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main);
             display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px;
         }
         .auth-card {
-            background: var(--bg-sidebar); border: 1px solid var(--border-color); width: 100%; max-width: 420px;
-            padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease;
+            background: var(--bg-card); border: none; width: 100%; max-width: 400px;
+            padding: 40px 30px; border-radius: 20px; box-shadow: var(--shadow-soft); animation: fadeIn 0.5s ease;
         }
-        .auth-card h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; text-align: center; }
-        .auth-card p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; text-align: center; }
+        .auth-card h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; text-align: center; color: var(--text-primary); }
+        .auth-card p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 24px; text-align: center; }
         .input-group { margin-bottom: 18px; }
-        .input-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+        .input-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
         .input-group input {
-            width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 14px 16px;
-            border-radius: 12px; color: #fff; outline: none; font-size: 0.95rem; transition: 0.2s;
+            width: 100%; background: #f8fafc; border: 1px solid var(--border-color); padding: 14px 16px;
+            border-radius: 12px; color: var(--text-primary); outline: none; font-size: 0.95rem; transition: 0.2s;
         }
-        .input-group input:focus { border-color: var(--accent-blue); }
+        .input-group input:focus { border-color: var(--accent-blue); background: #ffffff; }
         .auth-btn {
-            width: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); color: white;
-            border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px;
+            width: 100%; background: var(--gradient-main); color: white;
+            border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         }
         .auth-toggle-link { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; }
         .auth-toggle-link span { color: var(--accent-blue); font-weight: 600; }
 
-        /* --- Core App Layout Dashboard --- */
+        /* Main App Layout */
         #app-container { display: none; height: 100vh; width: 100vw; position: relative; }
 
-        /* Sidebar Navigation drawer */
+        /* Sidebar */
         .sidebar {
-            width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
+            width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.02);
         }
-        .sidebar-header { padding: 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
-        .sidebar-brand { font-weight: 700; font-size: 1.2rem; background: linear-gradient(90deg, #fff, var(--text-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
+        .sidebar-brand { font-weight: 700; font-size: 1.3rem; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 8px; }
         
-        /* Search Infrastructure */
-        .search-box-wrapper { padding: 16px 24px 8px 24px; }
+        /* Search */
+        .search-box-wrapper { padding: 16px 20px 8px 20px; }
         .search-inner {
-            display: flex; align-items: center; background: var(--bg-main); border: 1px solid var(--border-color);
-            padding: 10px 14px; border-radius: 12px; gap: 10px;
+            display: flex; align-items: center; background: #f1f5f9; border: 1px solid transparent;
+            padding: 10px 14px; border-radius: 10px; gap: 10px;
         }
-        .search-inner i { color: var(--text-secondary); font-size: 0.9rem; }
-        .search-inner input { background: transparent; border: none; outline: none; color: #fff; font-size: 0.9rem; width: 100%; }
+        .search-inner i { color: var(--text-secondary); }
+        .search-inner input { background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 0.9rem; width: 100%; }
 
         .new-chat-btn {
-            margin: 10px 24px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);
-            color: var(--accent-blue); padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 600;
-            font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
+            margin: 10px 20px; background: white; border: 2px solid var(--accent-blue);
+            color: var(--accent-blue); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600;
+            font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
         }
-        .new-chat-btn:hover { background: rgba(59, 130, 246, 0.2); }
+        .new-chat-btn:hover { background: var(--accent-blue); color: white; }
 
-        /* Realtime Chat Threads List Log */
-        .chat-history-list { flex: 1; overflow-y: auto; padding: 10px 24px; display: flex; flex-direction: column; gap: 8px; }
+        /* Chat History */
+        .chat-history-list { flex: 1; overflow-y: auto; padding: 10px 20px; display: flex; flex-direction: column; gap: 8px; }
         .history-card {
-            padding: 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px;
             font-size: 0.9rem; color: var(--text-secondary); transition: all 0.2s ease; border: 1px solid transparent;
-            animation: fadeIn 0.3s ease; position: relative;
         }
-        .history-card:hover, .history-card.active { background: var(--bg-card); color: #fff; border-color: var(--border-color); }
-        .history-card i { font-size: 1rem; }
+        .history-card:hover, .history-card.active { background: #f8fafc; color: var(--accent-blue); border-color: var(--border-color); font-weight: 500; }
+        .history-card i { color: var(--accent-pink); }
         .history-card .title-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .delete-thread-btn { position: absolute; right: 12px; color: #ef4444; display: none; cursor: pointer; }
         .history-card:hover .delete-thread-btn { display: block; }
 
-        .sidebar-footer { padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.1); }
-        .user-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; max-width: 70%; }
-        .user-meta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .logout-btn { color: #ef4444; cursor: pointer; font-size: 1.1rem; transition: transform 0.2s; }
-        .logout-btn:hover { transform: scale(1.1); }
+        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+        .user-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; }
+        .logout-btn { color: #ef4444; cursor: pointer; font-size: 1.2rem; }
 
-        /* Main Context Content Viewport */
-        .main-viewport { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); height: 100%; position: relative; }
+        /* Main Chat Area */
+        .main-viewport { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); height: 100%; }
         .main-header {
-            height: 75px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center;
-            justify-content: space-between; padding: 0 24px; background: var(--bg-sidebar);
+            height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 24px; background: var(--bg-card); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .menu-bar-toggle { font-size: 1.3rem; color: var(--text-secondary); cursor: pointer; display: none; }
+        .menu-bar-toggle { font-size: 1.4rem; color: var(--text-primary); cursor: pointer; display: none; }
         
-        /* Dual Engine Segment Switcher Controllers */
-        .engine-container { display: flex; background: var(--bg-main); padding: 4px; border-radius: 14px; border: 1px solid var(--border-color); }
+        .engine-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; }
         .engine-btn {
-            padding: 8px 18px; border-radius: 10px; border: none; background: transparent;
-            color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;
+            padding: 8px 16px; border-radius: 8px; border: none; background: transparent;
+            color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .engine-btn.active[data-engine="lite"] { background: var(--accent-blue); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-        .engine-btn.active[data-engine="pro"] { background: linear-gradient(135deg, #ec4899 0%, var(--accent-purple) 100%); color: #fff; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+        .engine-btn.active[data-engine="lite"] { background: white; color: var(--accent-blue); box-shadow: var(--shadow-soft); }
+        .engine-btn.active[data-engine="pro"] { background: white; color: var(--accent-pink); box-shadow: var(--shadow-soft); }
 
-        /* Messaging Scroll Area Node Stream */
-        .chat-stream-body { flex: 1; overflow-y: auto; padding: 30px 10%; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
-        .msg-row { display: flex; width: 100%; animation: fadeIn 0.35s ease-out; }
+        /* Messages */
+        .chat-stream-body { flex: 1; overflow-y: auto; padding: 30px 10%; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+        .msg-row { display: flex; width: 100%; animation: fadeIn 0.3s ease-out; }
         .msg-row.user { justify-content: flex-end; }
         .msg-row.ai { justify-content: flex-start; }
         
-        .msg-bubble { max-width: 80%; padding: 16px 20px; border-radius: 20px; font-size: 0.98rem; line-height: 1.6; position: relative; }
-        .msg-row.user .msg-bubble { background: var(--accent-blue); color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); }
-        .msg-row.ai .msg-bubble { background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-primary); border-bottom-left-radius: 4px; width: 100%; }
+        .msg-bubble { max-width: 80%; padding: 14px 18px; border-radius: 18px; font-size: 0.98rem; line-height: 1.6; position: relative; box-shadow: var(--shadow-soft); }
+        .msg-row.user .msg-bubble { background: var(--gradient-main); color: white; border-bottom-right-radius: 4px; }
+        .msg-row.ai .msg-bubble { background: white; border: 1px solid var(--border-color); color: var(--text-primary); border-bottom-left-radius: 4px; width: 100%; }
 
-        /* Code Block Elements Styles markdown formatting */
-        .msg-bubble pre { background: #07090d; border: 1px solid var(--border-color); padding: 16px; border-radius: 14px; margin: 12px 0; overflow-x: auto; }
-        .msg-bubble code { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: #f472b6; }
-        .msg-bubble pre code { color: #e2e8f0; }
-
-        .bubble-actions { display: flex; gap: 16px; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; }
-        .bubble-util-btn { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
-        .bubble-util-btn:hover { color: #fff; }
-
-        /* Input Control Deck Panel Layout */
-        .input-dock-footer { padding: 20px 10%; background: linear-gradient(180deg, transparent 0%, var(--bg-main) 40%); }
+        /* Chat Input Dock */
+        .input-dock-footer { padding: 20px 10%; background: var(--bg-main); }
         .input-wrapper-card {
-            background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: 20px;
-            padding: 12px 18px; display: flex; align-items: flex-end; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            background: white; border: 1px solid var(--border-color); border-radius: 30px;
+            padding: 10px 15px; display: flex; align-items: flex-end; gap: 12px; box-shadow: var(--shadow-soft);
         }
         .input-wrapper-card textarea {
-            flex: 1; background: transparent; border: none; outline: none; color: #fff;
-            font-size: 1rem; resize: none; height: 26px; max-height: 150px; padding: 2px 0; line-height: 1.5;
+            flex: 1; background: transparent; border: none; outline: none; color: var(--text-primary);
+            font-size: 1rem; resize: none; height: 26px; max-height: 120px; padding: 2px 0;
         }
-        .deck-action-icon { background: transparent; border: none; color: var(--text-secondary); font-size: 1.25rem; cursor: pointer; padding: 4px; transition: color 0.2s; }
-        .deck-action-icon:hover { color: #fff; }
-        #mic-trigger-btn.listening { color: #ef4444; animation: flashMic 1s infinite alternate; }
-        @keyframes flashMic { from { opacity: 1; } to { opacity: 0.4; } }
+        .input-wrapper-card textarea::placeholder { color: #94a3b8; }
+        .deck-action-icon { background: #f1f5f9; border: none; color: var(--accent-blue); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .deck-action-icon:hover { background: var(--accent-blue); color: white; }
         
-        .dispatch-send-btn { background: var(--accent-blue); color: white; border: none; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .dispatch-send-btn:hover { background: #2563eb; transform: scale(1.03); }
+        .dispatch-send-btn { background: var(--gradient-main); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); }
+        .dispatch-send-btn:hover { transform: scale(1.05); }
 
-        .status-pipeline-loader { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-secondary); align-self: flex-start; background: var(--bg-sidebar); padding: 12px 20px; border-radius: 14px; border: 1px solid var(--border-color); }
+        .status-pipeline-loader { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--accent-blue); align-self: flex-start; background: white; padding: 10px 20px; border-radius: 20px; box-shadow: var(--shadow-soft); font-weight: 500; }
 
-        /* Responsive Mobile Layout View Adjustments */
         @media (max-width: 968px) {
-            .chat-stream-body, .input-dock-footer { padding-left: 16px; padding-right: 16px; }
+            .chat-stream-body, .input-dock-footer { padding-left: 15px; padding-right: 15px; }
             .sidebar { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
             .sidebar.mobile-open { transform: translateX(0); }
             .menu-bar-toggle { display: block; }
@@ -186,52 +174,52 @@
             <span class="logo-txt-n">N</span>
             <span class="logo-txt-l">L</span>
         </div>
-        <p class="splash-tag">TrueChats Premium Workspace</p>
+        <p class="splash-tag">TrueChats Platform</p>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
-            <h2 id="auth-title">System Authentication</h2>
-            <p id="auth-subtitle">Create or log into your isolated cloud database terminal</p>
+            <h2 id="auth-title">Welcome</h2>
+            <p id="auth-subtitle">Login to continue using TrueChats AI</p>
             
             <div class="input-group">
-                <label>Terminal Email Account</label>
-                <input type="email" id="auth-email" placeholder="name@domain.com">
+                <label>Email ID</label>
+                <input type="email" id="auth-email" placeholder="nani@example.com">
             </div>
             <div class="input-group">
-                <label>Cryptographic Security Password</label>
-                <input type="password" id="auth-password" placeholder="••••••••••••">
+                <label>Password</label>
+                <input type="password" id="auth-password" placeholder="••••••••">
             </div>
 
-            <button class="auth-btn" onclick="executeAuthenticationRequest()" id="auth-primary-submit-btn">Authorize Node Connection</button>
-            <div class="auth-toggle-link" onclick="toggleAuthModes()" id="auth-toggle-trigger">Don't have an environment? <span>Register Account</span></div>
+            <button class="auth-btn" onclick="executeAuthenticationRequest()" id="auth-primary-submit-btn">Login</button>
+            <div class="auth-toggle-link" onclick="toggleAuthModes()" id="auth-toggle-trigger">Don't have an account? <span>Sign Up</span></div>
         </div>
     </div>
 
     <div id="app-container">
         <aside class="sidebar" id="app-sidebar-drawer">
             <div class="sidebar-header">
-                <span class="sidebar-brand"><i class="fas fa-shield-halved"></i> TrueChats Engine</span>
+                <span class="sidebar-brand"><i class="fas fa-comment-dots" style="color:var(--accent-pink);"></i> TrueChats AI</span>
                 <i class="fas fa-times menu-bar-toggle" onclick="toggleMobileSidebarView(false)"></i>
             </div>
             
             <div class="search-box-wrapper">
                 <div class="search-inner">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="thread-search-input" placeholder="Search chat history log..." oninput="filterChatThreadsLog(this.value)">
+                    <input type="text" id="thread-search-input" placeholder="Search chats..." oninput="filterChatThreadsLog(this.value)">
                 </div>
             </div>
 
-            <button class="new-chat-btn" onclick="initializeFreshChatThread()"><i class="fas fa-plus"></i> Initialize Thread Context</button>
+            <button class="new-chat-btn" onclick="initializeFreshChatThread()"><i class="fas fa-plus"></i> New Chat</button>
             
             <div class="chat-history-list" id="threads-injection-target"></div>
 
             <div class="sidebar-footer">
                 <div class="user-meta">
-                    <i class="far fa-user-circle" style="font-size: 1.25rem; color: var(--accent-blue);"></i>
+                    <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
                     <span id="active-user-display-string">Loading...</span>
                 </div>
-                <i class="fas fa-sign-out-alt logout-btn" onclick="terminateSessionLog()" title="Disconnect Authentication"></i>
+                <i class="fas fa-sign-out-alt logout-btn" onclick="terminateSessionLog()" title="Logout"></i>
             </div>
         </aside>
 
@@ -240,20 +228,20 @@
                 <i class="fas fa-bars menu-bar-toggle" onclick="toggleMobileSidebarView(true)"></i>
                 
                 <div class="engine-container">
-                    <button class="engine-btn active" data-engine="lite" onclick="shiftActiveModelSelection('lite')"><i class="fas fa-bolt"></i> AI Lite</button>
-                    <button class="engine-btn" data-engine="pro" onclick="shiftActiveModelSelection('pro')"><i class="fas fa-crown"></i> AI Pro</button>
+                    <button class="engine-btn active" data-engine="lite" onclick="shiftActiveModelSelection('lite')"><i class="fas fa-bolt"></i> Fast AI</button>
+                    <button class="engine-btn" data-engine="pro" onclick="shiftActiveModelSelection('pro')"><i class="fas fa-star"></i> Smart AI</button>
                 </div>
                 
-                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;"><i class="fas fa-database" style="color:#10b981;"></i> Cloud Sync</div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: 600;"><i class="fas fa-cloud"></i> Synced</div>
             </header>
 
             <div class="chat-stream-body" id="message-nodes-viewport-stream"></div>
 
             <div class="input-dock-footer">
                 <div class="input-wrapper-card">
-                    <button class="deck-action-icon" title="Multimodal Attachment Data Source"><i class="fas fa-paperclip"></i></button>
-                    <textarea id="main-prompt-input-field" placeholder="Enter processing commands..." oninput="autoScaleTextareaHeight(this)" onkeydown="interceptReturnKeyEvent(event)"></textarea>
-                    <button class="deck-action-icon" id="mic-trigger-btn" onclick="triggerWebAudioSpeechRecognition()" title="Voice Input Stream Control"><i class="fas fa-microphone"></i></button>
+                    <button class="deck-action-icon" title="Attach image or file"><i class="fas fa-paperclip"></i></button>
+                    <textarea id="main-prompt-input-field" placeholder="Type your message here..." oninput="autoScaleTextareaHeight(this)" onkeydown="interceptReturnKeyEvent(event)"></textarea>
+                    <button class="deck-action-icon" id="mic-trigger-btn" onclick="triggerWebAudioSpeechRecognition()" title="Speak to typing"><i class="fas fa-microphone"></i></button>
                     <button class="dispatch-send-btn" onclick="dispatchMessagePayload()"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -261,9 +249,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // CRITICAL CONFIGURATION: PASTE FIREBASE CREDENTIALS HERE
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
             authDomain: "minibot-1b6dc.firebaseapp.com",
@@ -273,115 +258,68 @@
             appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
         };
 
-        // Static AI Request Tokens Key Maps Fallbacks
         const OPENAI_API_TOKEN_VAL = "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";
         const GEMINI_API_TOKEN_VAL = "AQ.Ab8RN6JgChPe_v-qNDgfDBNOi5yRriVWoU2JqN8BczlgAyKmEQ";
 
-        // Runtime Global Application Architecture App Variables
         let activeAIEngineModel = 'lite';
         let firebaseAuthenticatedUserRef = null;
         let activeSelectedThreadId = null;
         let localCacheThreadCollectionArray = [];
         let isAuthenticationScreenModeRegistration = false;
 
-        // Initialize Firebase SDK Layers Instantly using Compatibility Layer API
-        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
-            firebase.initializeApp(firebaseConfig);
-        } else {
-            console.warn("Firebase parameters missing initialization tokens.");
-        }
+        if (firebaseConfig.apiKey) { firebase.initializeApp(firebaseConfig); }
 
-        // ==========================================
-        // 1. LIFECYCLE MANAGEMENT & SPA HARDWARE BACK INTERCEPTION
-        // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
                 setTimeout(() => splash.style.display = 'none', 400);
             }, 2000);
-
-            window.history.pushState({ screenState: "base_gateway" }, "");
             
-            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyAsYourKeyHere_Change_This") {
-                firebase.auth().onAuthStateChanged(user => {
-                    if (user) {
-                        firebaseAuthenticatedUserRef = user;
-                        document.getElementById('auth-screen').style.display = 'none';
-                        document.getElementById('app-container').style.display = 'flex';
-                        document.getElementById('active-user-display-string').innerText = user.email;
-                        window.history.pushState({ screenState: "workspace_active" }, "");
-                        syncUserChatHistoryThreadsRealtime();
-                    } else {
-                        firebaseAuthenticatedUserRef = null;
-                        document.getElementById('app-container').style.display = 'none';
-                        document.getElementById('auth-screen').style.display = 'flex';
-                    }
-                });
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    firebaseAuthenticatedUserRef = user;
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'flex';
+                    document.getElementById('active-user-display-string').innerText = "Nani (Admin)";
+                    syncUserChatHistoryThreadsRealtime();
+                } else {
+                    firebaseAuthenticatedUserRef = null;
+                    document.getElementById('app-container').style.display = 'none';
+                    document.getElementById('auth-screen').style.display = 'flex';
+                }
+            });
         });
 
-        window.onpopstate = function(event) {
-            if (event.state && event.state.screenState === "workspace_active") {
-                window.history.pushState({ screenState: "workspace_active" }, "");
-            } else {
-                const sidebar = document.getElementById('app-sidebar-drawer');
-                if (sidebar.classList.contains('mobile-open')) {
-                    toggleMobileSidebarView(false);
-                    window.history.pushState({ screenState: "workspace_active" }, "");
-                } else {
-                    window.history.pushState({ screenState: "workspace_active" }, "");
-                    alert("Click Sign Out Icon at the bottom footer if you intend to disconnect secure database server links safely.");
-                }
-            }
-        };
-
-        // ==========================================
-        // 2. FIREBASE CORE AUTHENTICATION UTILITIES
-        // ==========================================
         function toggleAuthModes() {
             isAuthenticationScreenModeRegistration = !isAuthenticationScreenModeRegistration;
-            document.getElementById('auth-title').innerText = isAuthenticationScreenModeRegistration ? "Register Terminal Node" : "System Authentication";
-            document.getElementById('auth-subtitle').innerText = isAuthenticationScreenModeRegistration ? "Instantiate a custom secure dataset node partition instance" : "Create or log into your isolated cloud database terminal";
-            document.getElementById('auth-primary-submit-btn').innerText = isAuthenticationScreenModeRegistration ? "Instantiate Node Database" : "Authorize Node Connection";
-            document.getElementById('auth-toggle-trigger').innerHTML = isAuthenticationScreenModeRegistration ? "Already possess active workspace token? <span>Login</span>" : "Don't have an environment? <span>Register Account</span>";
+            document.getElementById('auth-title').innerText = isAuthenticationScreenModeRegistration ? "Create Account" : "Welcome Back";
+            document.getElementById('auth-subtitle').innerText = isAuthenticationScreenModeRegistration ? "Register to start using AI" : "Login to continue using TrueChats AI";
+            document.getElementById('auth-primary-submit-btn').innerText = isAuthenticationScreenModeRegistration ? "Sign Up" : "Login";
+            document.getElementById('auth-toggle-trigger').innerHTML = isAuthenticationScreenModeRegistration ? "Already have an account? <span>Login</span>" : "Don't have an account? <span>Sign Up</span>";
         }
 
         async function executeAuthenticationRequest() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value.trim();
-            if(!email || !password) return alert("Provide credentials fully.");
-
+            if(!email || !password) return alert("Please enter email and password.");
             try {
                 if (isAuthenticationScreenModeRegistration) {
                     await firebase.auth().createUserWithEmailAndPassword(email, password);
                 } else {
                     await firebase.auth().signInWithEmailAndPassword(email, password);
                 }
-            } catch (err) {
-                alert(`Security Gateway Restriction: ${err.message}`);
-            }
+            } catch (err) { alert(`Error: ${err.message}`); }
         }
 
-        function terminateSessionLog() {
-            firebase.auth().signOut();
-        }
+        function terminateSessionLog() { firebase.auth().signOut(); }
 
-        // ==========================================
-        // 3. REALTIME CLOUD FIRESTORE LOGS HISTORY SYNC
-        // ==========================================
         function syncUserChatHistoryThreadsRealtime() {
             if (!firebaseAuthenticatedUserRef) return;
-            
             firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads')
-                .orderBy('timestamp', 'desc')
-                .onSnapshot(snapshot => {
+                .orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                     localCacheThreadCollectionArray = [];
-                    snapshot.forEach(doc => {
-                        localCacheThreadCollectionArray.push({ id: doc.id, ...doc.data() });
-                    });
+                    snapshot.forEach(doc => { localCacheThreadCollectionArray.push({ id: doc.id, ...doc.data() }); });
                     renderChatThreadsSidebarComponent(localCacheThreadCollectionArray);
                     
                     if (!activeSelectedThreadId && localCacheThreadCollectionArray.length > 0) {
@@ -389,269 +327,135 @@
                     } else if (localCacheThreadCollectionArray.length === 0) {
                         initializeFreshChatThread(true);
                     }
-                }, error => console.error("Firestore sync error:", error));
+                });
         }
 
         function renderChatThreadsSidebarComponent(threadsArray) {
             const container = document.getElementById('threads-injection-target');
             container.innerHTML = '';
-
             threadsArray.forEach(thread => {
                 const card = document.createElement('div');
                 card.className = `history-card ${thread.id === activeSelectedThreadId ? 'active' : ''}`;
                 card.setAttribute('onclick', `selectActiveWorkingContextThread('${thread.id}')`);
-                card.innerHTML = `
-                    <i class="far fa-comment-alt"></i>
-                    <span class="title-text">${thread.title || 'Untitled Operation'}</span>
-                    <i class="fas fa-trash-alt delete-thread-btn" onclick="event.stopPropagation(); purgeThreadContextRecord('${thread.id}')"></i>
-                `;
+                card.innerHTML = `<i class="far fa-comment"></i><span class="title-text">${thread.title || 'New Chat'}</span><i class="fas fa-trash-alt delete-thread-btn" onclick="event.stopPropagation(); purgeThreadContextRecord('${thread.id}')"></i>`;
                 container.appendChild(card);
             });
         }
 
-        function filterChatThreadsLog(query) {
-            const filtered = localCacheThreadCollectionArray.filter(t => t.title.toLowerCase().includes(query.toLowerCase()));
-            renderChatThreadsSidebarComponent(filtered);
-        }
-
         async function initializeFreshChatThread(isInitialDefault = false) {
-            if (!firebaseAuthenticatedUserRef) {
-                document.getElementById('message-nodes-viewport-stream').innerHTML = '';
-                renderWelcomeBannerNode();
-                return;
-            }
-
-            const freshThreadData = {
-                title: "New Context Session",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            const docRef = await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').add(freshThreadData);
+            if (!firebaseAuthenticatedUserRef) return;
+            const docRef = await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').add({ title: "New Chat", timestamp: firebase.firestore.FieldValue.serverTimestamp() });
             activeSelectedThreadId = docRef.id;
-            
             if(!isInitialDefault) toggleMobileSidebarView(false);
+            document.getElementById('message-nodes-viewport-stream').innerHTML = '';
             renderWelcomeBannerNode();
         }
 
         function selectActiveWorkingContextThread(threadId) {
             activeSelectedThreadId = threadId;
             document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
-            
-            firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).collection('messages')
-                .orderBy('timestamp', 'asc')
-                .get()
-                .then(snapshot => {
-                    const viewport = document.getElementById('message-nodes-viewport-stream');
-                    viewport.innerHTML = '';
-                    if(snapshot.empty) {
-                        renderWelcomeBannerNode();
-                    } else {
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            appendMessageNodeToDOM(data.sender, data.text, false);
-                        });
-                    }
-                    toggleMobileSidebarView(false);
-                });
-        }
-
-        function purgeThreadContextRecord(threadId) {
-            if(!confirm("Are you sure you want to permanently delete this conversation history?")) return;
-            
-            firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).delete().then(() => {
-                if(activeSelectedThreadId === threadId) {
-                    activeSelectedThreadId = null;
-                    document.getElementById('message-nodes-viewport-stream').innerHTML = '';
-                }
+            firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).collection('messages').orderBy('timestamp', 'asc').get().then(snapshot => {
+                const viewport = document.getElementById('message-nodes-viewport-stream');
+                viewport.innerHTML = '';
+                if(snapshot.empty) { renderWelcomeBannerNode(); } 
+                else { snapshot.forEach(doc => { const data = doc.data(); appendMessageNodeToDOM(data.sender, data.text, false); }); }
+                toggleMobileSidebarView(false);
             });
         }
 
-        // ==========================================
-        // 4. CORE CHAT CAPABILITIES & MULTIMODAL API INTEGRATIONS
-        // ==========================================
+        function purgeThreadContextRecord(threadId) {
+            if(confirm("Delete this chat permanently?")) {
+                firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).delete().then(() => {
+                    if(activeSelectedThreadId === threadId) { activeSelectedThreadId = null; document.getElementById('message-nodes-viewport-stream').innerHTML = ''; }
+                });
+            }
+        }
+
         async function dispatchMessagePayload() {
             const field = document.getElementById('main-prompt-input-field');
             const prompt = field.value.trim();
             if(!prompt) return;
-
-            field.value = '';
-            field.style.height = '26px';
+            field.value = ''; field.style.height = '26px';
 
             appendMessageNodeToDOM('user', prompt);
             if(firebaseAuthenticatedUserRef && activeSelectedThreadId) {
-                updateThreadTitleSummaryIfRequired(activeSelectedThreadId, prompt);
-                await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({
-                    sender: 'user', text: prompt, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                const cThread = localCacheThreadCollectionArray.find(t => t.id === activeSelectedThreadId);
+                if(cThread && (cThread.title === "New Chat" || !cThread.title)) {
+                    firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).update({ title: prompt.split(" ").slice(0, 3).join(" ") + "..." });
+                }
+                await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({ sender: 'user', text: prompt, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
             }
 
             const loaderId = appendStatusPipelineLoaderToStream();
 
             try {
                 let generatedAnswerString = "";
-
                 if (activeAIEngineModel === 'lite') {
-                    const apiResponseRaw = await fetch('https://api.openai.com/v1/chat/completions', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_TOKEN_VAL}` },
-                        body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: prompt }] })
-                    });
-                    const cleanedJSONData = await apiResponseRaw.json();
-                    if(cleanedJSONData.error) throw new Error(cleanedJSONData.error.message);
-                    generatedAnswerString = cleanedJSONData.choices[0].message.content;
+                    const res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_TOKEN_VAL}` }, body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: prompt }] }) });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error.message);
+                    generatedAnswerString = data.choices[0].message.content;
                 } else {
-                    const apiResponseRaw = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_TOKEN_VAL}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const cleanedJSONData = await apiResponseRaw.json();
-                    if(cleanedJSONData.error) throw new Error(cleanedJSONData.error.message);
-                    generatedAnswerString = cleanedJSONData.candidates[0].content.parts[0].text;
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_TOKEN_VAL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error.message);
+                    generatedAnswerString = data.candidates[0].content.parts[0].text;
                 }
 
                 removePipelineLoaderElement(loaderId);
                 appendMessageNodeToDOM('ai', generatedAnswerString);
 
                 if(firebaseAuthenticatedUserRef && activeSelectedThreadId) {
-                    await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({
-                        sender: 'ai', text: generatedAnswerString, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(activeSelectedThreadId).collection('messages').add({ sender: 'ai', text: generatedAnswerString, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                 }
-
             } catch (err) {
                 removePipelineLoaderElement(loaderId);
-                appendMessageNodeToDOM('ai', `**Architecture Pipeline Processing Refusal Error:** ${err.message}.`);
+                appendMessageNodeToDOM('ai', `Sorry, I ran into an error: ${err.message}`);
             }
         }
 
-        function updateThreadTitleSummaryIfRequired(threadId, promptText) {
-            const currentThread = localCacheThreadCollectionArray.find(t => t.id === threadId);
-            if(currentThread && (currentThread.title === "New Context Session" || currentThread.title === "")) {
-                const abbreviatedTitle = promptText.split(" ").slice(0, 4).join(" ") + "...";
-                firebase.firestore().collection('users').doc(firebaseAuthenticatedUserRef.uid).collection('threads').doc(threadId).update({
-                    title: abbreviatedTitle
-                });
-            }
-        }
-
-        // ==========================================
-        // 5. RENDER UTILITIES & DOM CORE NODE ENGINE
-        // ==========================================
         function appendMessageNodeToDOM(sender, text, triggerScroll = true) {
             const streamArea = document.getElementById('message-nodes-viewport-stream');
             const row = document.createElement('div');
             row.className = `msg-row ${sender}`;
-
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
 
             if(sender === 'ai') {
-                const parsedMarkdownHTML = marked.parse(text);
-                bubble.innerHTML = `
-                    <div class="markdown-rich-container">${parsedMarkdownHTML}</div>
-                    <div class="bubble-actions">
-                        <button class="bubble-util-btn" onclick="copyTextPayloadAsset(this)"><i class="far fa-copy"></i> Copy</button>
-                        <button class="bubble-util-btn" onclick="executeAudioSynthesisReading(this)"><i class="fas fa-volume-up"></i> Speak</button>
-                    </div>
-                `;
-            } else {
-                bubble.textContent = text;
-            }
+                bubble.innerHTML = `<div>${marked.parse(text)}</div>`;
+            } else { bubble.textContent = text; }
 
-            row.appendChild(bubble);
-            streamArea.appendChild(row);
-            if(triggerScroll) autoScrollStreamViewportToBottom();
+            row.appendChild(bubble); streamArea.appendChild(row);
+            if(triggerScroll) streamArea.scrollTop = streamArea.scrollHeight;
         }
 
         function appendStatusPipelineLoaderToStream() {
             const streamArea = document.getElementById('message-nodes-viewport-stream');
-            const uniqueId = 'pipeline-loader-' + Date.now();
-            
+            const uniqueId = 'loader-' + Date.now();
             const loaderNode = document.createElement('div');
-            loaderNode.className = 'status-pipeline-loader';
-            loaderNode.id = uniqueId;
-            loaderNode.innerHTML = `<i class="fas fa-circle-notch fa-spin" style="color:var(--accent-blue);"></i> <span>Evaluating multi-modal tokens matrix...</span>`;
-            
-            streamArea.appendChild(loaderNode);
-            autoScrollStreamViewportToBottom();
+            loaderNode.className = 'status-pipeline-loader'; loaderNode.id = uniqueId;
+            loaderNode.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>AI is typing...</span>`;
+            streamArea.appendChild(loaderNode); streamArea.scrollTop = streamArea.scrollHeight;
             return uniqueId;
         }
 
-        function removePipelineLoaderElement(id) {
-            const target = document.getElementById(id);
-            if(target) target.remove();
-        }
+        function removePipelineLoaderElement(id) { const target = document.getElementById(id); if(target) target.remove(); }
 
         function renderWelcomeBannerNode() {
-            appendMessageNodeToDOM('ai', "### TrueChats Secure Core Hub v2.5\nSystem interfaces online and running smoothly inside your sandboxed web browser terminal container environment.");
+            appendMessageNodeToDOM('ai', "### Welcome to TrueChats! \nHi! I am your AI assistant. Type a question below and hit send. You can ask me anything in simple words!");
         }
 
-        function autoScrollStreamViewportToBottom() {
-            const streamArea = document.getElementById('message-nodes-viewport-stream');
-            streamArea.scrollTop = streamArea.scrollHeight;
-        }
-
-        function autoScaleTextareaHeight(element) {
-            element.style.height = '26px';
-            element.style.height = (element.scrollHeight - 10) + 'px';
-        }
-
-        function interceptReturnKeyEvent(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                dispatchMessagePayload();
-            }
-        }
-
-        function shiftActiveModelSelection(modelKey) {
-            activeAIEngineModel = modelKey;
-            document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`.engine-btn[data-engine="${modelKey}"]`).classList.add('active');
-        }
-
-        function toggleMobileSidebarView(forceDisplayState) {
-            const sidebar = document.getElementById('app-sidebar-drawer');
-            if(forceDisplayState) {
-                sidebar.classList.add('mobile-open');
-            } else {
-                sidebar.classList.remove('mobile-open');
-            }
-        }
-
-        // ==========================================
-        // 6. RICH UTILITY PLUGINS (AUDIO & CLIPBOARD)
-        // ==========================================
-        function copyTextPayloadAsset(buttonElement) {
-            const cleanTextTarget = buttonElement.closest('.msg-bubble').querySelector('.markdown-rich-container').innerText;
-            navigator.clipboard.writeText(cleanTextTarget).then(() => {
-                buttonElement.innerHTML = `<i class="fas fa-check" style="color:#10b981;"></i> Copied`;
-                setTimeout(() => buttonElement.innerHTML = `<i class="far fa-copy"></i> Copy`, 2000);
-            });
-        }
-
-        function executeAudioSynthesisReading(buttonElement) {
-            const textSourceData = buttonElement.closest('.msg-bubble').querySelector('.markdown-rich-container').innerText;
-            const synthesisUtteranceInstance = new SpeechSynthesisUtterance(textSourceData);
-            window.speechSynthesis.speak(synthesisUtteranceInstance);
-        }
-
+        function autoScaleTextareaHeight(element) { element.style.height = '26px'; element.style.height = (element.scrollHeight - 10) + 'px'; }
+        function interceptReturnKeyEvent(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); dispatchMessagePayload(); } }
+        function shiftActiveModelSelection(modelKey) { activeAIEngineModel = modelKey; document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.engine-btn[data-engine="${modelKey}"]`).classList.add('active'); }
+        function toggleMobileSidebarView(forceDisplayState) { const sidebar = document.getElementById('app-sidebar-drawer'); if(forceDisplayState) sidebar.classList.add('mobile-open'); else sidebar.classList.remove('mobile-open'); }
+        
         function triggerWebAudioSpeechRecognition() {
             const NativeSpeechRecognitionEngine = window.SpeechRecognition || window.webkitSpeechRecognition;
             if(!NativeSpeechRecognitionEngine) return alert("Speech recognition not supported.");
-
             const activeRecognitionInstance = new NativeSpeechRecognitionEngine();
             activeRecognitionInstance.lang = 'en-US';
-            const micIconElementRef = document.getElementById('mic-trigger-btn');
-
-            activeRecognitionInstance.onstart = () => micIconElementRef.classList.add('listening');
-            activeRecognitionInstance.onresult = (eventData) => {
-                document.getElementById('main-prompt-input-field').value += eventData.results[0][0].transcript;
-                micIconElementRef.classList.remove('listening');
-            };
-            activeRecognitionInstance.onerror = () => micIconElementRef.classList.remove('listening');
-            activeRecognitionInstance.onend = () => micIconElementRef.classList.remove('listening');
-            
+            activeRecognitionInstance.onresult = (eventData) => { document.getElementById('main-prompt-input-field').value += eventData.results[0][0].transcript; };
             activeRecognitionInstance.start();
         }
     </script>
