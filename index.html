@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TrueChats AI Workspace</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #0d1117; color: #c9d1d9; overflow: hidden; height: 100vh; }
+
+        /* --- Splash Screen --- */
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0d1117, #161b22);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: opacity 0.5s ease;
+        }
+        .logo-container { position: relative; width: 100px; height: 100px; display: flex; justify-content: center; align-items: center;}
+        .n-logo { font-size: 5rem; font-weight: 800; color: #fff; z-index: 2; text-shadow: 0 0 15px rgba(88, 166, 255, 0.5); }
+        .l-logo { font-size: 5.5rem; font-weight: 800; color: rgba(255, 255, 255, 0.05); position: absolute; top: 10px; left: 20px; z-index: 1; }
+        .made-with { margin-top: 20px; font-size: 0.8rem; letter-spacing: 3px; color: #8b949e; text-transform: uppercase; }
+
+        /* --- Login Screen --- */
+        #login {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d1117; display: none; align-items: center; justify-content: center; z-index: 999;
+        }
+        .login-box { background: #161b22; padding: 40px; border-radius: 15px; border: 1px solid #30363d; text-align: center; width: 90%; max-width: 350px; }
+        .login-box h2 { color: #fff; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 8px; outline: none; }
+        .login-box button { width: 100%; padding: 12px; background: #238636; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* --- Main Chat App --- */
+        #app { display: none; flex-direction: column; height: 100vh; }
+        
+        /* Header & AI Switcher */
+        header { padding: 15px; background: #161b22; display: flex; justify-content: center; border-bottom: 1px solid #30363d; }
+        .switcher { display: flex; background: #0d1117; border-radius: 10px; padding: 5px; border: 1px solid #30363d; }
+        .switcher button { padding: 8px 20px; border: none; background: transparent; color: #8b949e; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .switcher button.active[data-ai="lite"] { background: #1f6feb; color: #fff; }
+        .switcher button.active[data-ai="pro"] { background: linear-gradient(90deg, #d2a8ff, #a371f7); color: #fff; }
+
+        /* Chat Area */
+        #chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .msg { max-width: 85%; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 0.95rem; }
+        .msg.user { align-self: flex-end; background: #1f6feb; color: #fff; border-bottom-right-radius: 2px; }
+        .msg.ai { align-self: flex-start; background: #161b22; border: 1px solid #30363d; border-bottom-left-radius: 2px; width: 100%; }
+        
+        /* Markdown / Pre styles */
+        .msg.ai pre { background: #0d1117; padding: 10px; border-radius: 8px; overflow-x: auto; margin-top: 10px; border: 1px solid #30363d; }
+        .msg.ai code { font-family: monospace; }
+        
+        /* Actions (Copy, TTS) */
+        .msg-actions { margin-top: 10px; display: flex; gap: 15px; border-top: 1px solid #30363d; padding-top: 10px; }
+        .msg-actions i { color: #8b949e; cursor: pointer; font-size: 0.9rem; }
+        .msg-actions i:hover { color: #fff; }
+
+        /* Input Area */
+        .input-area { padding: 15px; background: #161b22; border-top: 1px solid #30363d; }
+        .input-box { display: flex; background: #0d1117; padding: 10px; border-radius: 12px; border: 1px solid #30363d; align-items: center; gap: 10px; }
+        .input-box textarea { flex: 1; background: transparent; border: none; color: #fff; resize: none; height: 24px; outline: none; font-size: 0.95rem; }
+        .icon-btn { background: transparent; border: none; color: #8b949e; font-size: 1.2rem; cursor: pointer; }
+        .icon-btn:hover { color: #fff; }
+        .send-btn { color: #1f6feb; }
+        
+        /* Loader */
+        .loader { font-size: 0.85rem; color: #8b949e; align-self: flex-start; display: flex; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <div class="logo-container">
+            <span class="n-logo">N</span>
+            <span class="l-logo">L</span>
+        </div>
+        <p class="made-with">Made with NL</p>
+    </div>
+
+    <div id="login">
+        <div class="login-box">
+            <h2>Welcome Nani</h2>
+            <input type="password" id="pin" placeholder="Enter PIN (1234)">
+            <button onclick="checkLogin()">Login</button>
+            <p class="made-with" style="margin-top: 20px; font-size: 0.6rem;">Secured Workspace</p>
+        </div>
+    </div>
+
+    <div id="app">
+        <header>
+            <div class="switcher">
+                <button class="active" data-ai="lite" onclick="setAI('lite')">AI Lite</button>
+                <button data-ai="pro" onclick="setAI('pro')">AI Pro</button>
+            </div>
+        </header>
+
+        <div id="chat-area">
+            </div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <button class="icon-btn" title="Upload Image (Pro)"><i class="fas fa-paperclip"></i></button>
+                <textarea id="user-input" placeholder="Type a message..." onkeypress="handleEnter(event)"></textarea>
+                <button class="icon-btn" id="mic-btn" onclick="startMic()"><i class="fas fa-microphone"></i></button>
+                <button class="icon-btn send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div style="text-align: center; font-size: 0.7rem; color: #8b949e; margin-top: 8px;">Secured by NL Protocols</div>
+        </div>
+    </div>
+
+    <script>
+        // API Keys Configuration 
+        const OPENAI_KEY = "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";
+        const GEMINI_KEY = "AQ.Ab8RN6JgChPe_v-qNDgfDBNOi5yRriVWoU2JqN8BczlgAyKmEQ";
+        
+        let currentAI = 'lite'; // Default
+
+        // 1. Splash Screen to Login Logic
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splash').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('splash').style.display = 'none';
+                    document.getElementById('login').style.display = 'flex';
+                }, 500);
+            }, 2000); // 2 Seconds loading
+        };
+
+        // 2. Simple Login (Type 1234 to enter)
+        function checkLogin() {
+            const pin = document.getElementById('pin').value;
+            if(pin === "1234") {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                addAIMessage("Hello! Nenu ready. Evala em code chedham?");
+            } else {
+                alert("Wrong PIN!");
+            }
+        }
+
+        // 3. AI Switcher Logic
+        function setAI(type) {
+            currentAI = type;
+            document.querySelectorAll('.switcher button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.switcher button[data-ai="${type}"]`).classList.add('active');
+        }
+
+        // Handle Enter key for sending
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 4. Send Message & API Call
+        async function sendMessage() {
+            const inputField = document.getElementById('user-input');
+            const text = inputField.value.trim();
+            if (!text) return;
+
+            // Add user message to UI
+            addUserMessage(text);
+            inputField.value = '';
+
+            // Show Loading 
+            const loaderId = addLoader();
+
+            try {
+                let reply = "";
+                
+                if(currentAI === 'lite') {
+                    // Fetch from OpenAI directly
+                    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
+                        body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: text }] })
+                    });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error.message);
+                    reply = data.choices[0].message.content;
+
+                } else {
+                    // Fetch from Gemini directly
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+                    });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error.message);
+                    reply = data.candidates[0].content.parts[0].text;
+                }
+
+                removeLoader(loaderId);
+                addAIMessage(reply);
+
+            } catch (error) {
+                removeLoader(loaderId);
+                addAIMessage(`Error: ${error.message}. Please check API keys.`);
+            }
+        }
+
+        // 5. UI Helpers
+        const chatArea = document.getElementById('chat-area');
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'msg user';
+            div.innerText = text;
+            chatArea.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addAIMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'msg ai';
+            
+            // Markdown parsing
+            const htmlContent = marked.parse(text);
+            
+            div.innerHTML = `
+                <div class="content">${htmlContent}</div>
+                <div class="msg-actions">
+                    <i class="fas fa-copy" onclick="copyText(this)" title="Copy"></i>
+                    <i class="fas fa-volume-up" onclick="readText(this)" title="Read Aloud"></i>
+                </div>
+            `;
+            chatArea.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addLoader() {
+            const id = 'loader-' + Date.now();
+            const div = document.createElement('div');
+            div.className = 'loader';
+            div.id = id;
+            div.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>Researching & Analyzing...</span>';
+            chatArea.appendChild(div);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeLoader(id) {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+
+        function scrollToBottom() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // 6. Advanced Features (Mic, Copy, TTS)
+        function startMic() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(!SpeechRecognition) return alert("Mic not supported in this browser.");
+            
+            const mic = new SpeechRecognition();
+            mic.lang = 'en-US';
+            document.getElementById('mic-btn').style.color = '#1f6feb';
+            
+            mic.onresult = (e) => {
+                document.getElementById('user-input').value += e.results[0][0].transcript;
+                document.getElementById('mic-btn').style.color = '#8b949e';
+            };
+            mic.onerror = () => document.getElementById('mic-btn').style.color = '#8b949e';
+            mic.start();
+        }
+
+        function copyText(btn) {
+            const text = btn.closest('.msg').querySelector('.content').innerText;
+            navigator.clipboard.writeText(text);
+            btn.className = 'fas fa-check';
+            btn.style.color = '#238636';
+            setTimeout(() => { btn.className = 'fas fa-copy'; btn.style.color = '#8b949e'; }, 2000);
+        }
+
+        function readText(btn) {
+            const text = btn.closest('.msg').querySelector('.content').innerText;
+            const speech = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>
