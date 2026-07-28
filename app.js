@@ -1,24 +1,23 @@
 // ==========================================
 // FIREBASE CONFIGURATION PLACEHOLDERS
 // ==========================================
-/*
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
+  authDomain: "minibot-1b6dc.firebaseapp.com",
+  projectId: "minibot-1b6dc",
+  storageBucket: "minibot-1b6dc.firebasestorage.app",
+  messagingSenderId: "726010343364",
+  appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-*/
 
 // Mock Client Runtime for Standalone Execution
 let currentUser = { uid: "mock-user-123", email: "user@productivity.com" };
