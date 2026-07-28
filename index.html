@@ -1,157 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NL Advanced Multi-AI Chatbot</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProductivityPulse PWA</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <div id="loading-screen" class="overlay">
-        <div class="logo-wrapper">
-            <div class="logo-nl">
-                <span class="letter-n">N</span>
-                <span class="letter-l">L</span>
-            </div>
-            <div id="loader-status" class="loader-text">Researching and Analysing...</div>
-            <div class="loading-bar"><span></span></div>
-            <div class="brand-footer">Made with NL</div>
-        </div>
+  <!-- AUTHENTICATION PAGE -->
+  <div id="auth-container" class="auth-wrapper">
+    <div class="glass-card auth-card animate-fade-in">
+      <h2>ProductivityPulse</h2>
+      <p>Your intelligent daily companion</p>
+      <form id="auth-form">
+        <input type="email" id="auth-email" placeholder="Email Address" required>
+        <input type="password" id="auth-password" placeholder="Password" required>
+        <button type="submit" id="auth-btn" class="primary-btn">Sign In / Register</button>
+      </form>
     </div>
+  </div>
 
-    <div id="auth-screen" class="overlay hidden">
-        <div class="login-card">
-            <h2>Welcome to NL Multi-AI Portal</h2>
-            <p>Access your professional secure workspace</p>
-            <button id="google-login-btn" class="btn-primary"><i class="fab fa-google"></i> Sign In with Google</button>
-            <div class="brand-footer">Made with NL</div>
+  <!-- GLOBAL APP SHELL -->
+  <div id="app-container" class="app-shell hidden">
+    
+    <!-- Top Header -->
+    <header class="app-header glass">
+      <div class="header-left">
+        <h1 id="greeting">Good Morning, User</h1>
+        <div id="weather-widget" class="weather-pill">Loading weather...</div>
+      </div>
+      <div class="header-right">
+        <div class="toggle-group">
+          <label class="switch-label" title="Do Not Disturb">
+            <input type="checkbox" id="dnd-toggle">
+            <span class="slider round">🔕</span>
+          </label>
         </div>
-    </div>
+        <select id="theme-selector" class="theme-select">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="amoled">AMOLED</option>
+        </select>
+        <img id="user-avatar" src="https://via.placeholder.com/40" alt="Profile" class="avatar">
+      </div>
+    </header>
 
-    <div id="app-container" class="app-layout hidden">
+    <!-- Desktop Sidebar & Mobile Navigation -->
+    <nav class="nav-sidebar">
+      <button class="nav-btn active" data-target="view-home">🏠 Home</button>
+      <button class="nav-btn" data-target="view-calendar">📅 Calendar</button>
+      <button class="nav-btn" data-target="view-analytics">📈 Analytics</button>
+      <button class="nav-btn" data-target="view-settings">⚙️ Settings</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- HOME VIEW -->
+      <section id="view-home" class="app-view active">
+        <!-- Horizontal Scroll Section: Streaks & Quick Presets -->
+        <div class="horizontal-scroll-bar">
+          <div class="streak-badge glass">🔥 <span id="streak-count">0</span> Day Streak</div>
+          <button class="preset-btn glass" data-add-mins="15">+15m Nap</button>
+          <button class="preset-btn glass" data-add-mins="60">+1h Break</button>
+          <button class="preset-btn glass" data-add-mins="30">+30m Focus</button>
+        </div>
+
+        <!-- Search Bar with Voice Input -->
+        <div class="search-container glass">
+          <input type="text" id="global-search" placeholder="Search tasks or say 'Set alarm for Gym at 6 PM'...">
+          <button id="mic-btn" class="icon-btn" title="Voice Control">🎤</button>
+        </div>
+
+        <!-- Alarms / Tasks Vertical List -->
+        <div id="alarms-list" class="alarms-list">
+          <!-- Dynamically populated alarm cards -->
+        </div>
+      </section>
+
+      <!-- CALENDAR VIEW -->
+      <section id="view-calendar" class="app-view">
+        <h2>Interactive Schedule</h2>
+        <div id="calendar-grid" class="calendar-grid glass"></div>
+        <button id="export-ics" class="secondary-btn">Export to Google Calendar (.ics)</button>
+      </section>
+
+      <!-- ANALYTICS VIEW -->
+      <section id="view-analytics" class="app-view">
+        <h2>Performance & Audit Logs</h2>
+        <div class="chart-container glass">
+          <canvas id="productivityChart"></canvas>
+        </div>
+        <div class="audit-log-container glass">
+          <h3>Audit Log</h3>
+          <table id="audit-table">
+            <thead>
+              <tr><th>Task</th><th>Scheduled</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="view-settings" class="app-view">
+        <h2>Preferences</h2>
+        <div class="glass-card">
+          <p>Logged in as: <span id="user-email-display"></span></p>
+          <button id="logout-btn" class="danger-btn">Sign Out</button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Floating Action Button (FAB) -->
+    <button id="fab-add" class="fab-btn">+</button>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-target="view-home">🏠</button>
+      <button class="nav-btn" data-target="view-calendar">📅</button>
+      <button class="nav-btn" data-target="view-analytics">📈</button>
+      <button class="nav-btn" data-target="view-settings">⚙️</button>
+    </nav>
+  </div>
+
+  <!-- ADD / EDIT TASK MODAL -->
+  <div id="task-modal" class="modal-overlay hidden">
+    <div class="glass-card modal-content">
+      <h3 id="modal-title">New Alarm / Task</h3>
+      <form id="task-form">
+        <div class="autocomplete-wrapper">
+          <input type="text" id="task-name" placeholder="Task Name (e.g., Gym, Tiffin)" autocomplete="off" required>
+          <div id="autocomplete-dropdown" class="autocomplete-dropdown hidden"></div>
+        </div>
         
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-small">N<span>L</span></div>
-                <button id="new-chat-btn" class="btn-icon-label"><i class="fa fa-plus"></i> New Chat</button>
-            </div>
-            
-            <div class="chat-history-container" id="chat-history-list">
-                </div>
-
-            <div class="sidebar-footer">
-                <button id="open-library-btn" class="btn-sidebar"><i class="fa fa-book"></i> Prompt Library</button>
-                <button id="open-settings-btn" class="btn-sidebar"><i class="fa fa-cog"></i> Settings</button>
-                <div class="user-profile" id="user-display">
-                    <img id="user-avatar" src="" alt="Avatar" class="avatar hidden">
-                    <span id="user-name">Secure User</span>
-                </div>
-            </div>
-        </aside>
-
-        <main class="main-chat-area">
-            
-            <header class="top-nav">
-                <div class="model-switch-container">
-                    <button id="switch-lite" class="model-btn active" data-model="lite">
-                        <i class="fa fa-bolt"></i> AI Lite <span class="badge">ChatGPT</span>
-                    </button>
-                    <button id="switch-pro" class="model-btn" data-model="pro">
-                        <i class="fa fa-star"></i> AI Pro <span class="badge">Gemini 1.5</span>
-                    </button>
-                </div>
-                <div class="nav-actions">
-                    <button id="stop-generation-btn" class="btn-danger hidden"><i class="fa fa-stop"></i> Stop</button>
-                    <button id="export-chat-btn" class="btn-secondary" title="Export Conversations"><i class="fa fa-download"></i></button>
-                    <button id="share-chat-btn" class="btn-secondary" title="Share link"><i class="fa fa-share-alt"></i></button>
-                </div>
-            </header>
-
-            <section class="messages-container" id="messages-box">
-                <div class="empty-state">
-                    <h3>How can I assist you today?</h3>
-                    <p>Select model and start a secure session.</p>
-                </div>
-            </section>
-
-            <div id="image-preview-panel" class="preview-panel hidden">
-                <span id="close-preview">&times;</span>
-                <img id="preview-img" src="" alt="Upload preview">
-            </div>
-
-            <footer class="input-container-panel">
-                <div class="chat-input-wrapper">
-                    <label for="image-upload" class="input-action-btn" title="Upload Image (AI Pro)">
-                        <i class="fa fa-paperclip"></i>
-                        <input type="file" id="image-upload" accept="image/*" style="display:none;">
-                    </label>
-                    
-                    <textarea id="user-message-input" placeholder="Ask anything, press Enter to search..." rows="1"></textarea>
-                    
-                    <button id="voice-input-btn" class="input-action-btn" title="Voice Input"><i class="fa fa-microphone"></i></button>
-                    <button id="send-message-btn" class="send-btn" title="Send message"><i class="fa fa-paper-plane"></i></button>
-                </div>
-                <div class="bottom-branding">Made with NL | End-to-End Secure Processing Terminal</div>
-            </footer>
-        </main>
-    </div>
-
-    <div id="settings-modal" class="modal-overlay hidden">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fa fa-sliders"></i> Control Settings panel</h3>
-                <span class="close-modal" id="close-settings">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>System Prompts / Personas</label>
-                    <select id="system-persona-select">
-                        <option value="default">Standard AI Assistant</option>
-                        <option value="coder">Act like a Professional Coder / App Developer</option>
-                        <option value="interviewer">Act like an Elite Technical Interviewer</option>
-                    </select>
-                </div>
-                <div class="form-group metrics-box">
-                    <h4>Session Tracker Matrix</h4>
-                    <p>Estimated Token Cost (Current Frame): <span id="token-tracker-metric">0</span> tokens</p>
-                    <p>Context Buffer Limit: <strong>Last 5 Messages</strong> (Optimized Window Mode)</p>
-                </div>
-            </div>
+        <div class="form-row">
+          <label>Time: <input type="time" id="task-time" required></label>
+          <label>Priority: 
+            <select id="task-priority">
+              <option value="high">High (Red)</option>
+              <option value="med" selected>Medium (Yellow)</option>
+              <option value="low">Low</option>
+            </select>
+          </label>
         </div>
-    </div>
 
-    <div id="library-modal" class="modal-overlay hidden">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fa fa-book"></i> Save Prompt Shortcuts</h3>
-                <span class="close-modal" id="close-library">&times;</span>
-            </div>
-            <div class="modal-body">
-                <ul class="prompt-quick-list">
-                    <li class="prompt-item" data-prompt="Check this Java code for bugs: ">Check Java Bugs</li>
-                    <li class="prompt-item" data-prompt="Refactor this JS code for optimal speed: ">Optimize JS Performance</li>
-                    <li class="prompt-item" data-prompt="Explain this structural logic simply: ">Explain Architecture Logic</li>
-                </ul>
-            </div>
+        <div class="weekdays-selector">
+          <label><input type="checkbox" name="day" value="1"> M</label>
+          <label><input type="checkbox" name="day" value="2"> T</label>
+          <label><input type="checkbox" name="day" value="3"> W</label>
+          <label><input type="checkbox" name="day" value="4"> T</label>
+          <label><input type="checkbox" name="day" value="5"> F</label>
+          <label><input type="checkbox" name="day" value="6"> S</label>
+          <label><input type="checkbox" name="day" value="0"> S</label>
+          <label><input type="checkbox" id="everyday-chk"> Everyday</label>
         </div>
+
+        <div class="form-row">
+          <label>Alert Mode: 
+            <select id="alert-mode">
+              <option value="ring">Ring</option>
+              <option value="vibrate">Vibrate</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Conditional Vibrate Options -->
+        <div id="vibrate-options" class="sub-options">
+          <label><input type="radio" name="vib-mode" value="short" checked> Short</label>
+          <label><input type="radio" name="vib-mode" value="medium"> Medium</label>
+          <label><input type="radio" name="vib-mode" value="long"> Long</label>
+          <label><input type="radio" name="vib-mode" value="ultra"> Ultra</label>
+        </div>
+
+        <!-- Conditional Ring Options -->
+        <div id="ring-options" class="sub-options">
+          <select id="ring-sound">
+            <option value="ping1">Ping Classic</option>
+            <option value="ping2">Chime Soft</option>
+          </select>
+          <input type="file" id="custom-mp3" accept="audio/mp3">
+        </div>
+
+        <!-- Advanced Accordion -->
+        <details class="advanced-accordion">
+          <summary>Advanced Settings</summary>
+          <input type="number" id="snooze-limit" placeholder="Snooze limit (mins)" value="5">
+          <input type="text" id="location-trigger" placeholder="Location trigger (Lat, Lon or Address)">
+          <input type="number" id="repeat-interval" placeholder="Repeat interval (hours)">
+        </details>
+
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel" class="secondary-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Save Task</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <button id="scroll-bottom-btn" class="scroll-btn hidden"><i class="fa fa-arrow-down"></i></button>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
-          "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
-          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
-        }
-      }
-    </script>
-    <script type="module" src="app.js"></script>
+  <!-- Firebase SDK Scripts (Modular Placeholders) -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
