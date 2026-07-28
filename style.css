@@ -1,33 +1,27 @@
 :root {
   --bg-color: #0f172a;
-  --card-bg: rgba(30, 41, 59, 0.7);
+  --card-bg: rgba(30, 41, 59, 0.9);
   --text-color: #f8fafc;
   --primary: #6366f1;
   --primary-hover: #4f46e5;
   --danger: #ef4444;
   --warning: #f59e0b;
   --border-color: rgba(255, 255, 255, 0.1);
+  --font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 [data-theme="light"] {
   --bg-color: #f1f5f9;
-  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-bg: rgba(255, 255, 255, 0.95);
   --text-color: #0f172a;
   --border-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="amoled"] {
-  --bg-color: #000000;
-  --card-bg: rgba(15, 15, 15, 0.9);
-  --text-color: #ffffff;
-  --border-color: rgba(255, 255, 255, 0.15);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family) !important; /* Forces clean font, removes weird cursive */
 }
 
 body {
@@ -40,199 +34,66 @@ body {
 
 .hidden { display: none !important; }
 
+/* Enhanced Glassmorphism for better readability */
 .glass {
   background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 12px;
 }
 
 .glass-card {
   background: var(--card-bg);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 16px;
   padding: 24px;
 }
 
-/* Auth Page */
-.auth-wrapper {
+/* Modals & Forms Layout Fixes */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  z-index: 1000;
+  padding: 16px;
 }
-.auth-card {
+
+.modal-content {
   width: 100%;
   max-width: 400px;
-  text-align: center;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.auth-card input, .modal-content input, .modal-content select {
+
+.modal-content input, .modal-content select {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: transparent;
+  background: rgba(0,0,0,0.2);
   color: var(--text-color);
-}
-
-/* App Shell Layout */
-.app-shell {
-  display: grid;
-  grid-template-rows: 70px 1fr;
-  grid-template-columns: 240px 1fr;
-  height: 100vh;
-}
-
-.app-header {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  z-index: 10;
-}
-
-.header-left, .header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.weather-pill {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  background: var(--border-color);
-  border-radius: 20px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-/* Navigation */
-.nav-sidebar {
-  grid-row: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 24px 16px;
-  border-right: 1px solid var(--border-color);
-}
-
-.nav-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-color);
-  padding: 12px 16px;
-  text-align: left;
-  border-radius: 8px;
-  cursor: pointer;
   font-size: 1rem;
-  transition: background 0.2s;
 }
 
-.nav-btn.active, .nav-btn:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
-.bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-color);
-  justify-content: space-around;
-  padding: 12px;
-  z-index: 100;
-}
-
-/* Main Views */
-.main-content {
-  grid-row: 2;
-  grid-column: 2;
-  padding: 24px;
-  overflow-y: auto;
-  position: relative;
-}
-
-.app-view {
-  display: none;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.app-view.active {
+/* Align Checkboxes neatly */
+.weekdays-selector {
   display: flex;
-}
-
-/* Home Horizontal Bar */
-.horizontal-scroll-bar {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-}
-
-.streak-badge, .preset-btn {
-  padding: 8px 16px;
-  white-space: nowrap;
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
   font-size: 0.9rem;
+  margin: 8px 0;
 }
 
-.search-container {
-  display: flex;
-  align-items: center;
-  padding: 4px 12px;
-}
-
-.search-container input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 10px;
-  color: var(--text-color);
-  outline: none;
-}
-
-/* Alarms List & Cards */
-.alarms-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.alarm-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-  padding: 16px;
-  align-items: center;
-  position: relative;
-  transition: transform 0.2s;
-}
-
-.alarm-card.high { border-left: 6px solid var(--danger); }
-.alarm-card.med { border-left: 6px solid var(--warning); }
-
-.alarm-time-task h3 { font-size: 1.4rem; }
-.alarm-time-task p { font-size: 0.95rem; opacity: 0.8; }
-
-/* FAB */
+/* Fixed FAB Button Overlapping Issue */
 .fab-btn {
   position: fixed;
   bottom: 32px;
@@ -245,97 +106,64 @@ body {
   border: none;
   font-size: 2rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   z-index: 101;
-  transition: transform 0.2s;
-}
-.fab-btn:hover { transform: scale(1.05); }
-
-/* Modals */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
 }
 
-.modal-content {
-  width: 100%;
-  max-width: 500px;
+/* App Header Fixes */
+.app-header {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-}
-.form-row label { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-
-.weekdays-selector {
-  display: flex;
-  gap: 8px;
+  justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  padding: 12px 20px;
+  z-index: 10;
+  border-bottom: 1px solid var(--border-color);
 }
+.app-header h1 { font-size: 1.2rem; margin-bottom: 4px; }
 
-.sub-options {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-}
-
+/* Buttons */
 .primary-btn, .secondary-btn, .danger-btn {
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-weight: 600;
+  font-size: 1rem;
 }
 .primary-btn { background: var(--primary); color: #fff; }
-.secondary-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
-.danger-btn { background: var(--danger); color: #fff; }
+.secondary-btn { background: rgba(255,255,255,0.1); color: var(--text-color); border: 1px solid var(--border-color); }
+.danger-btn { background: var(--danger); color: #fff; width: 100%; margin-top: 10px; }
 
-/* Autocomplete Dropdown */
-.autocomplete-wrapper { position: relative; }
-.autocomplete-dropdown {
-  position: absolute;
-  top: 100%; left: 0; width: 100%;
-  max-height: 150px;
-  overflow-y: auto;
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  z-index: 10;
-}
-.autocomplete-item {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-.autocomplete-item:hover { background: var(--primary); color: #fff; }
-
-/* Analytics Chart Container */
-.chart-container {
-  padding: 16px;
-  height: 300px;
-}
-
-/* Responsive queries */
+/* Mobile Bottom Nav Fixes */
 @media(max-width: 768px) {
-  .app-shell { grid-template-columns: 1fr; }
-  .nav-sidebar { display: none; }
-  .bottom-nav { display: flex; }
-  .main-content { grid-column: 1; padding-bottom: 80px; }
+  .fab-btn {
+    bottom: 90px; /* Moved up to avoid bottom nav overlap */
+    right: 20px;
+  }
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    justify-content: space-around;
+    padding: 12px 0;
+    z-index: 100;
+  }
+  .nav-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    opacity: 0.6;
+  }
+  .nav-btn.active { opacity: 1; color: var(--primary); }
+  .main-content { padding-bottom: 100px; }
 }
+
+/* Specific fix for Audit Log display */
+#audit-table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px; }
+#audit-table th, #audit-table td { padding: 8px; border-bottom: 1px solid var(--border-color); }
