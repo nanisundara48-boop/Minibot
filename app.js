@@ -1,12 +1,12 @@
 // ==========================================
-// FIREBASE CONFIGURATION PLACEHOLDERS
+// FIREBASE CONFIGURATION & INITIALIZATION
 // ==========================================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// Using modular CDN imports for browser environment
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// Your exact Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC0LjnMxVedNp3JCZcdrztSq4Jx-w7MSWQ",
   authDomain: "minibot-1b6dc.firebaseapp.com",
@@ -16,15 +16,15 @@ const firebaseConfig = {
   appId: "1:726010343364:web:5b46ff25ebe1b78620be91"
 };
 
-// Initialize Firebase
+// Initialize Firebase Services
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Mock Client Runtime for Standalone Execution
-let currentUser = { uid: "mock-user-123", email: "user@productivity.com" };
-let tasks = [
-  { id: "1", name: "Gym Session", time: "18:00", priority: "high", active: true, subtasks: ["Legs", "Abs"] },
-  { id: "2", name: "Team Sync", time: "10:30", priority: "med", active: true, subtasks: ["Review sprint backlog"] }
-];
+// Global State
+let currentUser = null;
+let tasks = [];
+let unsubscribeTasks = null;
 
 // 50-60 Keywords Preset List
 const predefinedKeywords = [
@@ -35,46 +35,193 @@ const predefinedKeywords = [
   "Algorithms", "Stretch", "Feed pet", "Take vitamins", "Drink water", 
   "Deep work", "Nap", "Evening Tea", "Journaling", "Design critique", 
   "Sprint planning", "Retrospective", "Budget check", "Pay bills", "Language practice", 
-  "Skin care", "Clean desk", "Cook dinner", "Family time", "Check investments", 
-  "Backup data", "Update software", "Write blog", "Brainstorming", "Networking event", 
-  "Quick walk", "Post-lunch coffee", "Final check", "Shutdown PC"
+  "Skin care", "Clean desk", "Cook dinner", "Family time", "Check investments"
 ];
-
-// IndexedDB Helper for Offline-First Caching
-const initIndexedDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("ProductivityPulseDB", 1);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("tasks")) {
-        db.createObjectStore("tasks", { keyPath: "id" });
-      }
-    };
-  });
-};
 
 // UI Elements Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  initializeAppUI();
+  setupAuthListener();
   setupEventListeners();
   fetchWeatherData();
-  renderTasks();
   initChart();
   registerServiceWorker();
 });
 
-function initializeAppUI() {
-  // Toggle Auth vs App Shell based on user state
-  if (currentUser) {
-    document.getElementById("auth-container").classList.add("hidden");
-    document.getElementById("app-container").classList.remove("hidden");
-    document.getElementById("greeting").textContent = `Good Morning, ${currentUser.email.split('@')[0]}`;
-    document.getElementById("user-email-display").textContent = currentUser.email;
-  }
+// ==========================================
+// AUTHENTICATION LOGIC
+// ==========================================
+function setupAuthListener() {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is logged in
+      currentUser = user;
+      document.getElementById("auth-container").classList.add("hidden");
+      document.getElementById("app-container").classList.remove("hidden");
+      document.getElementById("greeting").textContent = `Good Morning, ${user.email.split('@')[0]}`;
+      document.getElementById("user-email-display").textContent = user.email;
+      
+      // Fetch user's tasks from Firestore
+      fetchTasksRealtime();
+    } else {
+      // User is logged out
+      currentUser = null;
+      document.getElementById("auth-container").classList.remove("hidden");
+      document.getElementById("app-container").classList.add("hidden");
+      if (unsubscribeTasks) unsubscribeTasks(); // Stop fetching tasks
+    }
+  });
 }
 
+// Handle Login / Registration form submit
+document.getElementById("auth-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("auth-email").value;
+  const password = document.getElementById("auth-password").value;
+  const btn = document.getElementById("auth-btn");
+  
+  btn.textContent = "Processing...";
+  
+  try {
+    // Try to login first
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    // If user doesn't exist, try creating an account
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("New account created successfully!");
+      } catch (signUpError) {
+        alert("Sign Up Error: " + signUpError.message);
+      }
+    } else {
+      alert("Login Error: " + error.message);
+    }
+  }
+  btn.textContent = "Sign In / Register";
+});
+
+// Logout handling
+document.getElementById("logout-btn").addEventListener("click", () => {
+  signOut(auth);
+});
+
+// ==========================================
+// FIRESTORE DATABASE LOGIC (TASKS)
+// ==========================================
+function fetchTasksRealtime() {
+  if (!currentUser) return;
+  
+  // Query tasks strictly for the logged-in user
+  const q = query(collection(db, "tasks"), where("uid", "==", currentUser.uid));
+  
+  unsubscribeTasks = onSnapshot(q, (snapshot) => {
+    tasks = [];
+    snapshot.forEach((docSnap) => {
+      tasks.push({ docId: docSnap.id, ...docSnap.data() });
+    });
+    
+    // Sort tasks by time
+    tasks.sort((a, b) => a.time.localeCompare(b.time));
+    renderTasks();
+  });
+}
+
+// Render Tasks List to UI
+function renderTasks() {
+  const listContainer = document.getElementById("alarms-list");
+  listContainer.innerHTML = "";
+  
+  if (tasks.length === 0) {
+    listContainer.innerHTML = `<p class="glass" style="padding: 20px; text-align: center;">No active alarms. Click + to add one.</p>`;
+    return;
+  }
+
+  tasks.forEach(task => {
+    const card = document.createElement("div");
+    card.className = `alarm-card glass ${task.priority}`;
+    card.innerHTML = `
+      <div class="priority-tag"></div>
+      <div class="alarm-time-task">
+        <h3>${task.time}</h3>
+        <p><strong>${task.name}</strong></p>
+      </div>
+      <div class="alarm-actions">
+        <input type="checkbox" ${task.active ? "checked" : ""} data-id="${task.docId}" class="task-toggle">
+        <button class="danger-btn" data-delete-id="${task.docId}" style="padding:4px 8px; font-size:0.8rem;">Delete</button>
+      </div>
+    `;
+    
+    // Toggle ON/OFF switch updates Firestore
+    card.querySelector(".task-toggle").addEventListener("change", async (e) => {
+      const docId = e.target.getAttribute("data-id");
+      const isActive = e.target.checked;
+      await updateDoc(doc(db, "tasks", docId), { active: isActive });
+    });
+
+    // Delete button removes from Firestore
+    card.querySelector("[data-delete-id]").addEventListener("click", async (e) => {
+      const docId = e.target.getAttribute("data-delete-id");
+      await deleteDoc(doc(db, "tasks", docId));
+    });
+
+    listContainer.appendChild(card);
+  });
+}
+
+// Add New Task from Modal Form
+document.getElementById("task-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+
+  const btn = e.target.querySelector("button[type='submit']");
+  btn.textContent = "Saving...";
+
+  const newTask = {
+    uid: currentUser.uid,
+    name: document.getElementById("task-name").value,
+    time: document.getElementById("task-time").value,
+    priority: document.getElementById("task-priority").value,
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    await addDoc(collection(db, "tasks"), newTask);
+    document.getElementById("task-modal").classList.add("hidden");
+    document.getElementById("task-form").reset();
+  } catch (error) {
+    alert("Error adding task: " + error.message);
+  } finally {
+    btn.textContent = "Save Task";
+  }
+});
+
+// Quick Preset Handlers (+15m, +1h) saves to Firestore
+document.querySelectorAll(".preset-btn").forEach(btn => {
+  btn.addEventListener("click", async (e) => {
+    if (!currentUser) return;
+    
+    const mins = parseInt(e.target.getAttribute("data-add-mins"));
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + mins);
+    const timeStr = now.toTimeString().substring(0, 5);
+    
+    const newTask = {
+      uid: currentUser.uid,
+      name: e.target.textContent,
+      time: timeStr,
+      priority: "med",
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+    
+    await addDoc(collection(db, "tasks"), newTask);
+  });
+});
+
+// ==========================================
+// UI/UX LOGIC & EVENT LISTENERS
+// ==========================================
 function setupEventListeners() {
   // Navigation Routing
   document.querySelectorAll(".nav-btn").forEach(btn => {
@@ -148,62 +295,10 @@ function setupEventListeners() {
   } else {
     micBtn.style.display = "none";
   }
-
-  // Quick Preset Handlers
-  document.querySelectorAll(".preset-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const mins = parseInt(e.target.getAttribute("data-add-mins"));
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + mins);
-      const timeStr = now.toTimeString().substring(0, 5);
-      
-      tasks.push({
-        id: Date.now().toString(),
-        name: e.target.textContent,
-        time: timeStr,
-        priority: "med",
-        active: true,
-        subtasks: []
-      });
-      renderTasks();
-    });
-  });
-
-  // Task Form Submit
-  document.getElementById("task-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const newTask = {
-      id: Date.now().toString(),
-      name: document.getElementById("task-name").value,
-      time: document.getElementById("task-time").value,
-      priority: document.getElementById("task-priority").value,
-      active: true,
-      subtasks: []
-    };
-    tasks.push(newTask);
-    modal.classList.add("hidden");
-    renderTasks();
-  });
-
-  // ICS Export
-  document.getElementById("export-ics").addEventListener("click", () => {
-    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ProductivityPulse//EN\n";
-    tasks.forEach(t => {
-      icsContent += `BEGIN:VEVENT\nSUMMARY:${t.name}\nDESCRIPTION:Task reminder\nDTSTART:20260728T${t.time.replace(':', '')}00Z\nEND:VEVENT\n`;
-    });
-    icsContent += "END:VCALENDAR";
-    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "schedule.ics";
-    a.click();
-  });
 }
 
 // Voice Command Parser Logic
 function parseVoiceCommand(command) {
-  // Simple NLP pattern matching for "Set alarm for [Task] at [Time]"
   if (command.toLowerCase().includes("set alarm for")) {
     const parts = command.split(" at ");
     if (parts.length === 2) {
@@ -215,44 +310,9 @@ function parseVoiceCommand(command) {
   }
 }
 
-// Render Tasks List
-function renderTasks() {
-  const listContainer = document.getElementById("alarms-list");
-  listContainer.innerHTML = "";
-  
-  if (tasks.length === 0) {
-    listContainer.innerHTML = `<p class="glass" style="padding: 20px; text-align: center;">No active alarms. Click + to add one.</p>`;
-    return;
-  }
-
-  tasks.forEach(task => {
-    const card = document.createElement("div");
-    card.className = `alarm-card glass ${task.priority}`;
-    card.innerHTML = `
-      <div class="priority-tag"></div>
-      <div class="alarm-time-task">
-        <h3>${task.time}</h3>
-        <p><strong>${task.name}</strong></p>
-      </div>
-      <div class="alarm-actions">
-        <input type="checkbox" ${task.active ? "checked" : ""} data-id="${task.id}" class="task-toggle">
-        <button class="danger-btn" data-delete-id="${task.id}" style="padding:4px 8px; font-size:0.8rem;">Delete</button>
-      </div>
-    `;
-    
-    card.querySelector(".task-toggle").addEventListener("change", (e) => {
-      task.active = e.target.checked;
-    });
-
-    card.querySelector("[data-delete-id]").addEventListener("click", (e) => {
-      tasks = tasks.filter(t => t.id !== e.target.getAttribute("data-delete-id"));
-      renderTasks();
-    });
-
-    listContainer.appendChild(card);
-  });
-}
-
+// ==========================================
+// APIs & UTILITIES
+// ==========================================
 // OpenWeather API Integration using Geolocation
 function fetchWeatherData() {
   const weatherWidget = document.getElementById("weather-widget");
@@ -260,10 +320,12 @@ function fetchWeatherData() {
     navigator.geolocation.getCurrentPosition(async (position) => {
       const { latitude, longitude } = position.coords;
       try {
-        // Placeholder API call using OpenWeather format
+        // You can replace YOUR_OPENWEATHER_API_KEY with an actual key if you have one
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=YOUR_OPENWEATHER_API_KEY`);
         const data = await response.json();
-        weatherWidget.textContent = `${data.name}: ${Math.round(data.main.temp)}°C, ${data.weather[0].main}`;
+        if(data.main) {
+          weatherWidget.textContent = `${data.name}: ${Math.round(data.main.temp)}°C, ${data.weather[0].main}`;
+        }
       } catch (err) {
         weatherWidget.textContent = "Bhimavaram: 32°C, Partly Cloudy";
       }
@@ -275,28 +337,30 @@ function fetchWeatherData() {
 
 // Chart.js Analytics Initialization
 function initChart() {
-  const ctx = document.getElementById('productivityChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [{
-        label: 'Tasks Completed',
-        data: [5, 8, 6, 9, 7, 4, 6],
-        backgroundColor: '#6366f1',
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.05)' } },
-        x: { grid: { display: false } }
+  const ctx = document.getElementById('productivityChart');
+  if(ctx) {
+    new Chart(ctx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          label: 'Tasks Completed',
+          data: [5, 8, 6, 9, 7, 4, 6],
+          backgroundColor: '#6366f1',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 // Service Worker Registration
@@ -306,4 +370,4 @@ function registerServiceWorker() {
       .then(() => console.log("Service Worker Registered Successfully"))
       .catch(err => console.log("Service Worker Registration Failed", err));
   }
-                     }
+}
